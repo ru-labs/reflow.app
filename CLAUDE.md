@@ -108,17 +108,18 @@ Vite + React 19 + TypeScript SPA, talking directly to a hosted Supabase project
 src/
   App.tsx            top-level routing/auth gate
   main.tsx           entry point
-  pages/             Landing, Auth, Today — route-level screens
+  pages/             Landing, Auth, Today, History — route-level screens
   components/        UI pieces (TaskList, TaskRow, MorningFlow, CompareDuel,
                       BrainDump, LeftoverCard, TagInput, AddTaskFab,
                       TaskModal, InstallPrompt, VersionBadge, BorderGlow,
                       AppLoading, EmptyState, TaskListSkeleton, Toast,
-                      UpdateBanner)
+                      UpdateBanner, HistoryRow)
   components/icons/  hand-written stroke icons (24px grid, 1.75px stroke — see
                       branding.md for the icon system, don't pull in an icon lib)
   hooks/             useAuth, useTasks, useMorningFlow, useCompareInsertion,
                       useLongPressDrag, useInstallPrompt, useRolloverPrompt,
-                      useReducedMotion, useAppUpdate, useTheme, useToast
+                      useReducedMotion, useAppUpdate, useTheme, useToast,
+                      useHistory, useHashRoute
   lib/               framework-free logic + its co-located *.test.ts:
                       tasks.ts (Supabase CRUD), ranking.ts (rank-gap math),
                       compare.ts (binary-search comparator), triage.ts
@@ -127,7 +128,8 @@ src/
                       (client init), devMock.ts (VITE_DEV_MODE bypass),
                       validation.ts (input limits), textScale.ts
                       (length-to-font-size tiers), theme.ts (profile
-                      theme_preference)
+                      theme_preference), history.ts (history date ranges,
+                      day grouping, hours parsing)
 supabase/migrations/  hand-applied SQL, run in filename order via the Supabase
                       SQL Editor — there is no migration runner/CLI wired up
 ```

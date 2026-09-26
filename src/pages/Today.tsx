@@ -20,6 +20,7 @@ import { UpdateBanner } from '../components/UpdateBanner';
 import { forceReloadApp } from '../hooks/useAppUpdate';
 import { Mark } from '../components/icons/Mark';
 import { Refresh } from '../components/icons/Refresh';
+import { Clock } from '../components/icons/Clock';
 import { SignOut } from '../components/icons/SignOut';
 import { ThemeToggle } from '../components/icons/ThemeToggle';
 import type { Task } from '../lib/tasks';
@@ -158,6 +159,7 @@ export function Today({ session, isDark, toggleTheme }: { session: Session; isDa
           <ThemeToggle isDark={isDark} />
         </button>
         <button className="rail-action" onClick={morning.start}>start my day</button>
+        <button className="rail-action" onClick={() => (window.location.hash = '#/history')}>history</button>
         <button className="rail-signout" onClick={signOut} disabled={signingOut}>
           {signingOut ? 'signing out…' : 'sign out'}
         </button>
@@ -170,6 +172,13 @@ export function Today({ session, isDark, toggleTheme }: { session: Session; isDa
         </div>
         <div className="header-right">
           {!loading && <span className="count-chip">{allClear ? 'all clear' : `${tasks.length} today`}</span>}
+          <button
+            className="header-signout"
+            aria-label="history"
+            onClick={() => (window.location.hash = '#/history')}
+          >
+            <Clock width={20} height={20} />
+          </button>
           <button
             className="header-signout"
             aria-label="reload app"

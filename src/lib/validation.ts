@@ -3,6 +3,7 @@ export const TAG_MAX_LENGTH = 30;
 export const TAGS_MAX_COUNT = 10;
 export const EMAIL_MAX_LENGTH = 254; // RFC 5321 mailbox limit
 export const PASSWORD_MAX_LENGTH = 72; // bcrypt truncates beyond this anyway
+export const HOURS_MAX = 24; // mirrors tasks_hours_spent_range (0006)
 
 type ValidationResult<T = void> = { ok: true; value: T } | { ok: false; error: string };
 

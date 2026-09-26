@@ -8,9 +8,9 @@ cover. Sourced from current `src/` and `supabase/migrations/*.sql`, not from his
 
 ## 1. Data model
 
-One table drives the whole app, defined across four hand-applied migrations
+One table drives the whole app, defined across five hand-applied migrations
 (`supabase/migrations/0001_tasks.sql`, `0002_task_fields.sql`, `0004_profiles.sql`,
-`0005_input_limits.sql`, run in filename order — `0003` was a repair migration for a
+`0005_input_limits.sql`, `0006_task_history.sql`, run in filename order — `0003` was a repair migration for a
 since-resolved schema drift and no longer exists, see below). Confirmed live against both
 Supabase projects (`reflow` prod/dev-schema-split and `reflow dev`) via the Supabase MCP tools,
 not just read off the migration files — schema, constraints, RLS policies, and indexes all match
@@ -25,10 +25,12 @@ tasks
   status           text — 'active' | 'done' | 'dropped'
   rank             double precision — see §5, rank-gap insertion
   created_at       timestamptz, default now()
-  completed_at     timestamptz, nullable — set on status → 'done'
+  completed_at     timestamptz, nullable — "closed at": set on status → 'done' or 'dropped'
+                   (pre-0006 dropped rows backfilled with created_at — approximate)
   last_triaged_on  date — see §6, drives the "is this a leftover" check
   tags             text[], default '{}' (constrained: ≤10 tags, 0005; validation.ts mirrors client-side)
   due_time         time, nullable — added in 0002, not read/written anywhere in src/; dead column
+  hours_spent      numeric(5,2), nullable — manually entered decimal hours, 0 < h ≤ 24 (0006)
 ```
 
 `profiles` (added 0004) holds one row per user: `theme_preference` ('system' | 'light' | 'dark'),
@@ -65,9 +67,10 @@ in `lib`.
 - `pwa.ts` — install-prompt eligibility logic (standalone/iOS/dismissed checks)
 - `validation.ts` — title/email/password validation, mirrored server-side by migration 0005
 - `textScale.ts` — maps text length to a font-size/width tier (duel headline, card title)
+- `history.ts` — history date ranges (presets, Monday-start weeks, inclusive custom range), group-by-local-day with hours totals, hours-input parsing (§8)
 
 **I/O / environment-dependent:**
-- `tasks.ts` — all Supabase CRUD for the `tasks` table
+- `tasks.ts` — all Supabase CRUD for the `tasks` table (incl. the history queries: `listClosedTasks`, `updateTaskHours`, `lastActiveRank`, `reopenTask`)
 - `supabase.ts` — client init (`createClient`, schema selected via `VITE_SUPABASE_SCHEMA`)
 - `theme.ts` — reads/writes `profiles.theme_preference`
 - `devMock.ts` — `VITE_DEV_MODE` bypass: mock session + in-memory task list mirroring `tasks.ts`'s API shape, so hooks can call either without branching on shape (only on which one to call)
@@ -75,7 +78,7 @@ in `lib`.
 `src/hooks/*.ts`: `useAuth` (session state, sign-in/up/out, OAuth), `useTasks` (§3, the task list and
 every mutation), `useMorningFlow` (§6), `useCompareInsertion` (§5), `useLongPressDrag` (reorder-drag
 gesture state), `useInstallPrompt`, `useRolloverPrompt`, `useReducedMotion`, `useAppUpdate`, `useTheme`,
-`useToast`.
+`useToast`, `useHistory` (§8, closed tasks for a range + hours/reopen mutations), `useHashRoute` (§8).
 
 ## 3. The optimistic-mutation pattern
 
@@ -93,6 +96,9 @@ still-open follow-up in `docs/plans/swipe-card-refinement/refinement-check-2026-
 optimistic-mutation primitive"). `commitReorder`'s rollback source (a ref snapshot, not the plain
 `previous` local var the other four use) is the specific wrinkle that review noted as not fitting the
 primitive cleanly — worth resolving if/when that extraction happens, not assumed away.
+
+`useHistory.ts`'s `setHours` and `reopen` follow the same four steps against their own `tasks` state,
+reusing `useTasks`'s exported `describeFailure` for the wording.
 
 ## 4. Realtime sync
 
@@ -170,7 +176,24 @@ on shape), and OAuth buttons that just set the mock session directly. Exists so 
 automation don't require a real Supabase project — every hook checks `DEV_MODE` and calls
 `mockTasksApi.x` instead of the real Supabase call.
 
-## 8. Known follow-ups
+## 8. History screen & hash routing
+
+`History.tsx` lists closed tasks (`done` + `dropped`) for a date range so past work can be read back
+when filling in a task-based timesheet. `completed_at` is the "closed at" timestamp for both statuses
+(§1); rows are grouped by the *local* day they were closed (`history.ts`'s `localDayKey`, not
+`toISOString`, which would bucket by UTC day). Each settled row has an optional decimal
+`hours_spent` input (saved on blur/Enter, validated by `parseHours`, mirrored by the 0006 constraint);
+let-go rows are shown muted without one. "Reopen" puts a task back at the bottom of today's list
+(`rankBetween(lastActiveRank(), null)`) with `last_triaged_on = today` so it isn't re-triaged as a
+leftover; Today refetches on mount, and other open tabs pick it up via realtime (§4).
+
+Routing is a single hash route: `App.tsx`'s `screen` is `'history'` when signed in and
+`useHashRoute()` reads `#/history`, otherwise the existing loading/today/auth/landing logic. A hash
+route (not `/history`) because there is no router and no `vercel.json` SPA rewrite — a path route
+would 404 on reload. Entry points: `history` in Today's desktop rail and the `Clock` icon in the
+mobile header.
+
+## 9. Known follow-ups
 
 Pointers only — see the linked source for full detail, don't duplicate it here:
 

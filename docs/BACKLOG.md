@@ -9,6 +9,8 @@ and remove it from this list — don't track it in both places.
 - [ ] Dynamic tag filter: derive clickable filter chips from tasks' active tags, animate them in;
       needs a matching filter icon (see `src/components/icons/`)
 - [ ] Reposition tags in `TaskRow` to float on the right side instead of stacking under the title
+- [ ] History: filter by tag (e.g. a client/project code), so one billing code's work can be read off at once
+- [ ] History: copy the range as text / download CSV (title, closed date, hours) to paste into a timesheet tool
 
 ## Infrastructure (carried over from the archived `devops-setup` plan)
 

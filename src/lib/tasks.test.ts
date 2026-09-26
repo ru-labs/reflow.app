@@ -13,6 +13,7 @@ function makeTask(overrides: Partial<Task>): Task {
     completed_at: null,
     last_triaged_on: '2026-08-01',
     tags: [],
+    hours_spent: null,
     ...overrides,
   };
 }
@@ -26,5 +27,15 @@ describe('normalizeTask', () => {
   it('leaves an existing tags array untouched', () => {
     const task = makeTask({ tags: ['work'] });
     expect(normalizeTask(task).tags).toEqual(['work']);
+  });
+
+  it('defaults a missing hours_spent column to null', () => {
+    const task = makeTask({ hours_spent: undefined as unknown as null });
+    expect(normalizeTask(task).hours_spent).toBeNull();
+  });
+
+  it('coerces a numeric-string hours_spent to a number', () => {
+    const task = makeTask({ hours_spent: '1.50' as unknown as number });
+    expect(normalizeTask(task).hours_spent).toBe(1.5);
   });
 });

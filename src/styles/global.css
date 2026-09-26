@@ -1516,3 +1516,131 @@ button {
 .update-banner-refresh:hover { box-shadow: 0 8px 20px -8px rgba(75, 63, 143, 0.6); }
 .update-banner-refresh:active { transform: scale(0.96); }
 .update-banner-refresh:focus-visible { outline: 2px solid var(--violet-soft); outline-offset: 2px; }
+
+/* History — closed tasks by day, with optional hours for timesheets */
+.history-shell { max-width: 640px; margin: 0 auto; }
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(18px + var(--safe-top)) calc(16px + var(--safe-right)) 14px calc(12px + var(--safe-left));
+  border-bottom: 1px solid var(--mist);
+}
+.history-heading { margin: 0; }
+.history-main { padding: 18px calc(16px + var(--safe-right)) calc(64px + var(--safe-bottom)) calc(16px + var(--safe-left)); }
+
+.history-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.history-chip {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--dusk);
+  background: var(--mist);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.history-chip:hover { background: var(--haze); color: var(--ink); }
+.history-chip[aria-pressed="true"] { background: var(--violet); color: var(--paper); }
+.history-chip:focus-visible { outline: 2px solid var(--violet-soft); outline-offset: 2px; }
+
+.history-custom { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.history-custom label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dusk); }
+.history-date {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--haze);
+  border-radius: 10px;
+  padding: 6px 8px;
+  color-scheme: light;
+}
+.history-date:focus { outline: none; border-color: var(--violet-soft); }
+:root[data-theme="dark"] .history-date { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .history-date { color-scheme: dark; }
+}
+
+.history-summary { margin: 0 0 18px; }
+.history-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.history-day { margin-bottom: 22px; }
+.history-day-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--dusk);
+  margin: 0 0 8px;
+  padding: 0 2px;
+}
+.history-day-heading .history-mono { color: var(--violet); }
+.history-list { list-style: none; margin: 0; padding: 0; }
+
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border-radius: 14px;
+  background: var(--mist);
+  margin-bottom: 8px;
+}
+.history-row-let-go { grid-template-columns: minmax(0, 1fr) auto; background: transparent; border: 1px dashed var(--haze); }
+.history-row-let-go .history-title { color: var(--dusk); }
+.history-title { font-size: 15px; color: var(--ink); line-height: 1.35; overflow-wrap: anywhere; }
+.history-meta { font-family: var(--font-mono); font-size: 11px; color: var(--dusk); }
+
+.history-hours {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--dusk);
+  background: var(--paper);
+  border: 1.5px solid var(--haze);
+  border-radius: 10px;
+  padding: 4px 8px;
+  transition: border-color 0.15s ease;
+}
+.history-hours:focus-within { border-color: var(--violet-soft); }
+.history-hours-error { border-color: var(--dusk); }
+.history-hours input {
+  width: 3.2em;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.history-hours input:focus { outline: none; }
+.history-hours input::placeholder { color: var(--haze); }
+
+.history-reopen {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dusk);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.history-reopen:hover { background: var(--haze); color: var(--ink); }
+.history-reopen:focus-visible { outline: 2px solid var(--violet-soft); outline-offset: 2px; }
+.history-field-error { grid-column: 1 / -1; font-size: 12px; color: var(--dusk); }
+
+@media (min-width: 900px) {
+  .history-header { padding: 40px 40px 18px 32px; border-bottom: none; }
+  .history-main { padding: 8px 40px 64px; }
+}

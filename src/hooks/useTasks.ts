@@ -13,7 +13,7 @@ function isNetworkError(err: unknown): boolean {
   return err instanceof TypeError;
 }
 
-function describeFailure(action: string, err: unknown): string {
+export function describeFailure(action: string, err: unknown): string {
   return isNetworkError(err)
     ? `${action} — check your connection and try again`
     : `${action} — something went wrong on our end, try again in a bit`;
