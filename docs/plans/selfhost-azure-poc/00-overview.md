@@ -42,6 +42,7 @@ no CORS and auth can use an httpOnly session cookie.
 | D7 | **Caddy** as reverse proxy + static server | Automatic HTTPS in 3 lines. The `.app` TLD is HSTS-preloaded, so HTTPS is mandatory. |
 | D8 | PoC scope: **no Google/GitHub OAuth, no email confirmation, no password reset** on self-hosted | Keeps the PoC small. All three are prerequisites for the prod cutover (phase 13). |
 | D9 | Self-hosted deploy is a **separate GitHub Actions workflow**. `release.yml`/Octopus stay untouched | Can't break the current DEV/QUALITY/PROD pipeline. |
+| D11 | **Google/GitHub OAuth moved to after phase 11**, before the load test (phase 12). Decided 2026-10-15. Phase 07's optional OAuth step is skipped for now. | Keeps phases 07–11 focused on the self-hosted path. Decision by the user. |
 | D10 | Load test with **k6** (API-level workflow + static asset fetch), run from outside the VM | k6 handles 1000 VUs on a laptop. A browser-level test at 1000 users isn't feasible. Running it on the VM would skew results. |
 
 ## Assumptions (correct these if wrong)
@@ -56,14 +57,14 @@ no CORS and auth can use an httpOnly session cookie.
 
 | Fact | Value |
 |---|---|
-| Azure region | |
+| Azure region | `northeurope` |
 | Resource group | `rg-reflow-poc` |
-| VM name | `vm-reflow-poc` |
-| VM admin user | `reflow` |
-| VM public IP (static) | |
+| VM name | `reflowapp-vm` (hostname; plan had `vm-reflow-poc`) |
+| VM admin user | `reflowadmin` (plan had `reflow`) |
+| VM public IP (static) | `98.71.18.196` |
 | Azure DNS label | `reflow-poc.<region>.cloudapp.azure.com` |
 | SSH key (laptop) | `~/.ssh/reflow_poc` |
-| DNS provider for usereflow.app | |
+| DNS provider for usereflow.app | Cloudflare (NS: `iris`/`lennox.ns.cloudflare.com`), `self` A record DNS-only |
 | Self-hosted URL | `https://self.usereflow.app` |
 | Where secrets live | VM: `/opt/reflow/.env` (chmod 600). CI: GitHub Actions secrets `SELFHOST_*` |
 
@@ -71,13 +72,13 @@ no CORS and auth can use an httpOnly session cookie.
 
 | File | Phase | Owner | Status |
 |---|---|---|---|
-| `01-create-vm.md` | Create the VM in Azure portal | you | ☐ |
-| `02-azure-config.md` | Auto-shutdown off, static IP, NSG, budget, alerts | you | ☐ |
-| `03-remote-ssh.md` | SSH config + VS Code Remote-SSH | you | ☐ |
-| `04-os-baseline.md` | Updates, swap, firewall, fail2ban, Docker | you | ☐ |
-| `05-postgres.md` | Postgres 17 in Docker, backups, tunnel | you | ☐ |
-| `06-host-current-app.md` | Serve the **current** (Supabase) build via Caddy on the VM IP | you | ☐ |
-| `07-subdomain-https.md` | `self.usereflow.app` + automatic HTTPS | you | ☐ |
+| `01-create-vm.md` | Create the VM in Azure portal | you | ☑ |
+| `02-azure-config.md` | Auto-shutdown off, static IP, NSG, budget, alerts | you | ☑ |
+| `03-remote-ssh.md` | SSH config + VS Code Remote-SSH | you | ☑ |
+| `04-os-baseline.md` | Updates, swap, firewall, fail2ban, Docker | you | ☑ |
+| `05-postgres.md` | Postgres 17 in Docker, backups, tunnel | you | ☐ (one item open: `server/.env`, needs phase 08) |
+| `06-host-current-app.md` | Serve the **current** (Supabase) build via Caddy on the VM IP | you | ☑ |
+| `07-subdomain-https.md` | `self.usereflow.app` + automatic HTTPS | you | ☑ |
 | `08-backend-api.md` | `server/`: Fastify API, schema, auth, SSE, tests | agent | ☐ |
 | `09-frontend-data-layer.md` | Build-time switch `VITE_BACKEND`, self-hosted adapter | agent | ☐ |
 | `10-first-selfhosted-deploy.md` | Manual deploy → **🎯 working self-hosted demo** | you + agent | ☐ |
@@ -101,3 +102,9 @@ is done (the agent needs the DB tunnel).
 | Date | Phase | What happened / decisions made |
 |---|---|---|
 | 2026-09-26 | — | Plan written. |
+| 2026-10-15 | 01–03 | VM exists and is reachable via `ssh reflow-vm` (alias uses user `reflowadmin`). |
+| 2026-10-15 | 04 | Done and verified after reboot: apt upgraded, 2G swap, ufw (22/80/443), fail2ban, Docker 29.9.1 + Compose v5.6.0 (user in `docker` group). Archived. |
+| 2026-10-15 | 06 | Done. Build with `--mode poc` (`.env.poc.local`, `VITE_SUPABASE_SCHEMA=public`; DEV has no `dev` schema, the plan's `dev` was wrong). Files in `/opt/reflow/www` (53 files, copied via tar over SSH; a drag-and-drop first copied a nested `dist/` folder, fixed). Caddy (`caddy:2-alpine`) serves `http://98.71.18.196`. Sign-in with DEV account works after unpausing the DEV Supabase project (it had been paused). Task add verified against DEV. Caddy warns about HTTPS, expected until phase 07. Archived. |
+| 2026-10-15 | 07 | Done. Milestone 1 reached: DEV sign-in and Today screen work on `https://self.usereflow.app`; service worker active. OAuth deferred (D11). Archived. |
+| 2026-10-15 | 07 (details) | `self` A record in Cloudflare (DNS only) → 98.71.18.196; no CAA records. Caddy has email `richard.uzik2@gmail.com` and site `self.usereflow.app`; Let's Encrypt cert issued (valid to 2027-01-13). HTTP → HTTPS 308 works. Service worker registered on https. Decided: Google/GitHub OAuth moved to after phase 11 (D11). Open: confirm DEV sign-in on https and Today screen. |
+| 2026-10-15 | 05 (almost done) | `/opt/reflow` (owner `reflowadmin`), `.env` (chmod 600), `compose.yaml`, `reflow-db-1` healthy on 127.0.0.1:5432. PG 17.11 verified. `pg_stat_statements` on. `reflow_dev` + `reflow_test` created. Laptop: port 5432 closed from internet (`TcpTestSucceeded: False`); SSH tunnel `localhost:15432` works; connected via VS Code PostgreSQL extension (SSL must be Disabled, tunnel encrypts). `reflow_dev` empty. Nightly `pg_dump` cron at 03:00 UTC, manual dump OK. Reboot check passed. Open: write `server/.env` for the agent once phase 08 creates `server/` (its `.env` must be gitignored). |

@@ -7,12 +7,12 @@ The DB stays empty for now.
 
 ## Project directory + secrets
 
-- [ ] **[you]** `sudo mkdir -p /opt/reflow/backups && sudo chown -R reflow:reflow /opt/reflow && cd /opt/reflow`
-- [ ] **[you]** Generate a DB password: `echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)" > .env && chmod 600 .env`. This file is the only place the password lives. Don't paste it into the plan or git.
+- [x] **[you]** `sudo mkdir -p /opt/reflow/backups && sudo chown -R reflow:reflow /opt/reflow && cd /opt/reflow`
+- [x] **[you]** Generate a DB password: `echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)" > .env && chmod 600 .env`. This file is the only place the password lives. Don't paste it into the plan or git.
 
 ## compose.yaml
 
-- [ ] **[you]** Create `/opt/reflow/compose.yaml`:
+- [x] **[you]** Create `/opt/reflow/compose.yaml`:
 
   ```yaml
   services:
@@ -45,32 +45,32 @@ The DB stays empty for now.
     pgdata:
   ```
   Memory settings are sized for 2 GiB shared with the API + Caddy.
-- [ ] **[you]** Start it: `docker compose up -d db`
-- [ ] **[you]** `docker compose ps` → `db` is `running (healthy)` after ~10 s.
+- [x] **[you]** Start it: `docker compose up -d db`
+- [x] **[you]** `docker compose ps` → `db` is `running (healthy)` after ~10 s.
 
 ## Verify from inside
 
-- [ ] **[you]** `docker compose exec db psql -U reflow -d reflow -c 'select version();'` prints PostgreSQL 17.x.
-- [ ] **[you]** Enable query stats (used in the load test): `docker compose exec db psql -U reflow -d reflow -c 'create extension if not exists pg_stat_statements;'`
-- [ ] **[you]** Create the two extra databases the coding agent needs: `docker compose exec db createdb -U reflow reflow_dev` and `docker compose exec db createdb -U reflow reflow_test`
-- [ ] **[you]** Confirm it isn't public: from your **laptop**, `Test-NetConnection reflow-poc.<region>.cloudapp.azure.com -Port 5432` → `TcpTestSucceeded : False`.
+- [x] **[you]** `docker compose exec db psql -U reflow -d reflow -c 'select version();'` prints PostgreSQL 17.x.
+- [x] **[you]** Enable query stats (used in the load test): `docker compose exec db psql -U reflow -d reflow -c 'create extension if not exists pg_stat_statements;'`
+- [x] **[you]** Create the two extra databases the coding agent needs: `docker compose exec db createdb -U reflow reflow_dev` and `docker compose exec db createdb -U reflow reflow_test`
+- [x] **[you]** Confirm it isn't public: from your **laptop**, `Test-NetConnection reflow-poc.<region>.cloudapp.azure.com -Port 5432` → `TcpTestSucceeded : False`.
 
 ## Reach it from the laptop (SSH tunnel)
 
-- [ ] **[you]** In PowerShell: `ssh -N -L 15432:localhost:5432 reflow-vm` (leave running). Or in VS Code Remote: *Ports* panel → *Forward a Port* → `5432`.
-- [ ] **[you]** Connect with any client (DBeaver, pgAdmin, or `psql`): host `localhost`, port `15432`, user `reflow`, db `reflow_dev`, password from `/opt/reflow/.env`. You should see an empty DB.
+- [x] **[you]** In PowerShell: `ssh -N -L 15432:localhost:5432 reflow-vm` (leave running). Or in VS Code Remote: *Ports* panel → *Forward a Port* → `5432`.
+- [x] **[you]** Connect with any client (DBeaver, pgAdmin, or `psql`): host `localhost`, port `15432`, user `reflow`, db `reflow_dev`, password from `/opt/reflow/.env`. You should see an empty DB.
 - [ ] **[you]** Hand the agent the connection details it needs in **its local, gitignored** `server/.env`, *not* in chat logs or the plan: `DATABASE_URL=postgres://reflow:<pw>@localhost:15432/reflow_dev` and `TEST_DATABASE_URL=…/reflow_test`.
 
 ## Nightly backup (PoC-grade: same disk, 7 days)
 
-- [ ] **[you]** `crontab -e` and add:
+- [x] **[you]** `crontab -e` and add:
 
   ```
   0 3 * * * cd /opt/reflow && docker compose exec -T db pg_dump -U reflow -Fc reflow > backups/reflow-$(date +\%F).dump && find backups -name '*.dump' -mtime +7 -delete
   ```
-- [ ] **[you]** Run the command once by hand and check `ls -lh /opt/reflow/backups` shows a non-empty `.dump`. (A copy off the VM is part of phase 13.)
+- [x] **[you]** Run the command once by hand and check `ls -lh /opt/reflow/backups` shows a non-empty `.dump`. (A copy off the VM is part of phase 13.)
 
 ## Resilience
 
-- [ ] **[you]** `sudo reboot` → reconnect → `docker compose ps` shows `db` healthy again without you doing anything.
-- [ ] **[you]** Session log line, then move this file to `archive/`.
+- [x] **[you]** `sudo reboot` → reconnect → `docker compose ps` shows `db` healthy again without you doing anything.
+- [x] **[you]** Session log line, then move this file to `archive/`.
