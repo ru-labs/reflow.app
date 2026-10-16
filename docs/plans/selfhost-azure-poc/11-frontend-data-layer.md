@@ -1,4 +1,4 @@
-# Phase 09 — Frontend: build-time backend switch
+# Phase 11 — Frontend: build-time backend switch
 
 Outcome: `npm run build` produces **the same Supabase app as today**.
 `npm run build:selfhosted` produces an app that talks only to `/api` on its
@@ -23,7 +23,7 @@ own origin, with no supabase-js in the bundle.
 
 ## Self-hosted implementation
 
-- [ ] **[agent]** `src/lib/backend/selfhosted.ts` implements `Backend` with `fetch` against the phase-08 routes (`credentials: 'same-origin'`, JSON). A non-2xx response throws `new Error(body.error ?? status)`. Network failures stay `TypeError` naturally, so `describeFailure()` in `useTasks` keeps distinguishing "check your connection" from server errors.
+- [ ] **[agent]** `src/lib/backend/selfhosted.ts` implements `Backend` with `fetch` against the phase-10 routes (`credentials: 'same-origin'`, JSON). A non-2xx response throws `new Error(body.error ?? status)`. Network failures stay `TypeError` naturally, so `describeFailure()` in `useTasks` keeps distinguishing "check your connection" from server errors.
 - [ ] **[agent]** `onSessionChange`: call `GET /api/auth/session` once on subscribe and emit the result (401 → `null`). Re-emit after signIn/signUp/signOut. Keep the 10 s timeout behaviour in `useAuth` working.
 - [ ] **[agent]** `signUp` returns `confirmationSent: false` (auto-confirm in the PoC). `supportsOAuth: false`.
 - [ ] **[agent]** `subscribeTaskChanges`: `new EventSource('/api/tasks/stream')`, listening to the `task` event → `onRow(JSON)`. `onopen` → `live`. `onerror` → `stale` (EventSource reconnects by itself).

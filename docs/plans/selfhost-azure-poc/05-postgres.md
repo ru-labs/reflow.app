@@ -2,7 +2,7 @@
 
 Outcome: Postgres 17 running in a container, reachable **only** from the VM
 itself (and from your laptop through an SSH tunnel), surviving reboots, with
-nightly dumps. The schema itself comes from the API's migrations in phase 08.
+nightly dumps. The schema itself comes from the API's migrations in phase 10.
 The DB stays empty for now.
 
 ## Project directory + secrets
@@ -68,7 +68,7 @@ The DB stays empty for now.
   ```
   0 3 * * * cd /opt/reflow && docker compose exec -T db pg_dump -U reflow -Fc reflow > backups/reflow-$(date +\%F).dump && find backups -name '*.dump' -mtime +7 -delete
   ```
-- [x] **[you]** Run the command once by hand and check `ls -lh /opt/reflow/backups` shows a non-empty `.dump`. (A copy off the VM is part of phase 13.)
+- [x] **[you]** Run the command once by hand and check `ls -lh /opt/reflow/backups` shows a non-empty `.dump`. (A copy off the VM is part of phase 15. Phase 09 replaces this cron line once the DB runs under Dokploy.)
 
 ## Resilience
 

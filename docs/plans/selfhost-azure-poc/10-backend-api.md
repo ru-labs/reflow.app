@@ -1,4 +1,4 @@
-# Phase 08 — Self-hosted backend API (`server/`)
+# Phase 10 — Self-hosted backend API (`server/`)
 
 Outcome: a small Node API that replaces exactly what the SPA uses from
 Supabase (PostgREST queries, Auth, Realtime), for the self-hosted build only.
@@ -10,13 +10,13 @@ Production is not affected by anything in this phase.
 reproduce their behaviour. Decisions D1, D4–D6 in `00-overview.md` are settled.
 Don't revisit them.
 
-**Prerequisite [you]:** phase 05 done. The laptop has an SSH tunnel
+**Prerequisite [you]:** phases 05 and 09 done (the DB now runs under Dokploy; the tunnel is unchanged). The laptop has an SSH tunnel
 (`ssh -N -L 15432:localhost:5432 reflow-vm`) and `server/.env` holds
 `DATABASE_URL` (→ `reflow_dev`) and `TEST_DATABASE_URL` (→ `reflow_test`).
 
 ## Project skeleton
 
-- [ ] **[agent]** Create a branch `feature/selfhost-poc` from `dev`.
+- [ ] **[agent]** Check out `feature/selfhost-poc` (created in phase 09) and pull. Every push to it triggers a Dokploy build of the default (Supabase) app; see phase 09 "Auto-deploy from git".
 - [ ] **[agent]** `server/` as its **own npm package** (own `package.json`, `tsconfig.json`, lockfile), independent of the root app build. Stack: Node 24, TypeScript, **Fastify 5**, `pg`, `@fastify/cookie`, `@fastify/rate-limit`, `bcrypt` (native; fall back to `bcryptjs` only if the Alpine build is a problem), `vitest`, `tsx` for dev. Use Fastify's built-in JSON-schema validation. No ORM, no zod.
 - [ ] **[agent]** Scripts: `dev` (tsx watch, loads `server/.env`), `build` (tsc → `dist/`), `start`, `test`, `migrate`.
 - [ ] **[agent]** Make sure the root `tsc -b`, `oxlint` and `vitest` configs don't pick up `server/` (exclude it if needed), and root `npm run build`/`test`/`lint` still pass unchanged.
@@ -25,7 +25,7 @@ Don't revisit them.
 ## Database schema — `server/migrations/0001_init.sql`
 
 - [ ] **[agent]** Migration runner `server/src/migrate.ts`: applies `migrations/*.sql` in filename order, each in a transaction. Tracks applied files in a `schema_migrations(filename, applied_at)` table and takes `pg_advisory_lock` so two containers can't race. Runs on API startup when `RUN_MIGRATIONS=true`.
-- [ ] **[agent]** `users(id uuid pk default gen_random_uuid(), email text not null, encrypted_password text, email_confirmed_at timestamptz, created_at timestamptz not null default now())`, with a unique index on `lower(email)`. Column names mirror Supabase `auth.users` so the phase-13 migration is a straight copy.
+- [ ] **[agent]** `users(id uuid pk default gen_random_uuid(), email text not null, encrypted_password text, email_confirmed_at timestamptz, created_at timestamptz not null default now())`, with a unique index on `lower(email)`. Column names mirror Supabase `auth.users` so the phase-15 migration is a straight copy.
 - [ ] **[agent]** `sessions(token_hash text pk, user_id uuid not null references users on delete cascade, created_at timestamptz default now(), expires_at timestamptz not null)` + an index on `user_id`.
 - [ ] **[agent]** `tasks` equal to the **end state** of the Supabase migrations 0001+0002+0005+0006: all columns (incl. `note`, `due_time`, `tags text[] not null default '{}'`, `hours_spent numeric(5,2)`), all check constraints (`status`, title length/not blank, tags count, hours range), both indexes. FK `user_id → users(id) on delete cascade`. No RLS: isolation is enforced in the API (below).
 - [ ] **[agent]** `profiles` equal to Supabase `0004_profiles.sql`, FK → `users`.
