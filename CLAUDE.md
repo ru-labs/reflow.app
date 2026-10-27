@@ -1,195 +1,123 @@
 # CLAUDE.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+reflow — an interrupt-resilient personal day-planner: one ranked task list per day that
+survives unplanned work. Product purpose, users and tone: `PRODUCT.md`. Visual identity
+(colors, type, icons, motion): `branding.md`. **Both are binding — treat as decided, don't
+re-derive or override.**
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+## Read before you start
 
-## 1. Think Before Coding
+Don't re-explore the repo from scratch; read the doc that matches the task first.
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+| Task touches… | Read first |
+|---|---|
+| data model, module boundaries, optimistic updates, realtime, ranking/duel, morning flow | `docs/ARCHITECTURE.md` |
+| first-time setup, Supabase project, migrations | `README.md` |
+| branches, merging, deploys, CI, Octopus | `.claude/skills/devops-workflow/SKILL.md` |
+| a feature that has a plan | `docs/plans/<plan>/` (see "Plans") |
+| open ideas / known polish items | `docs/BACKLOG.md` |
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+## Stack and where things live
 
-## 2. Simplicity First
+Vite + React 19 + TypeScript SPA → hosted Supabase (Postgres + Auth + Realtime). **No custom
+backend today.** Plain CSS in `src/styles/`, animation via `framer-motion` (patched, see
+`patches/`), hand-written icons in `src/components/icons/` (no icon library).
 
-**Minimum code that solves the problem. Nothing speculative.**
+| Area | Path |
+|---|---|
+| Routing / auth gate | `src/App.tsx`, `src/main.tsx` |
+| Screens | `src/pages/` (Landing, Auth, Today, History) |
+| UI pieces | `src/components/` |
+| Supabase calls + React state | `src/hooks/` |
+| Pure logic + co-located `*.test.ts` | `src/lib/` |
+| DB schema | `supabase/migrations/` (hand-applied SQL) |
+| CI/CD | `.github/workflows/release.yml` |
+| Diagrams (generated SVG) | `scripts/diagrams/` → `docs/diagrams/` via `npm run diagrams` |
+| Docs and plans | `docs/` |
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+Don't hard-code file lists here — `ls src/lib src/hooks src/components` is the source of truth.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+**In progress:** `docs/plans/selfhost-azure-poc/` explores self-hosting (Node API + Postgres +
+Dokploy on an Azure VM) from branch `feature/selfhost-poc`. It is a PoC and does not change
+the architecture above unless that plan says a phase landed.
 
-## 3. Surgical Changes
+## Code rules
 
-**Touch only what you must. Clean up only your own mess.**
+- **Logic placement:** business logic is plain functions in `src/lib/` with a co-located
+  `*.test.ts`. Anything needing Supabase or React state goes in `src/hooks/`. Don't put
+  logic in components.
+- **Follow existing patterns** — mutations are optimistic with rollback (see ARCHITECTURE.md);
+  match that rather than inventing a new shape.
+- **Input limits** live in `src/lib/validation.ts` and are mirrored by DB constraints
+  (`0005_input_limits.sql`). Change both together.
+- **UI changes** follow `branding.md` (palette, type, 24px/1.75px-stroke icons, motion
+  timing) and respect `useReducedMotion`.
+- Match surrounding style, naming and comment density. No new dependency without asking.
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+## Workflow: plan → approve → execute → hand off
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+1. **Plan first.** For any feature, write a plan as a trackable `.md` with a `- [ ]` task
+   list (see "Plans") and **stop for approval**. Don't implement before it's approved.
+2. **Execute** the approved plan, ticking boxes as you go.
+3. **Hand off for manual testing.** When done, say so and give short, concrete steps for
+   testing it by hand (what to click, what to expect, edge cases worth trying, e.g. with
+   `VITE_DEV_MODE=true npm run dev`). The user tests and reports bugs.
 
-The test: Every changed line should trace directly to the user's request.
+**Do not self-test in the browser** (Playwright MCP, screenshots, browser automation) or
+write e2e tests unless the user explicitly asks — it burns tokens the user would rather
+spend themselves. Cheap checks are fine: `npm run build` (catches type errors) and
+`npm run test` for the unit tests next to the logic you touched.
 
-## 4. Goal-Driven Execution
+If you added/removed files in `src/lib|hooks|components`, or implemented a backlog item,
+update docs via the `docs-maintenance` skill.
 
-**Define success criteria. Loop until verified.**
+## Database changes
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
+There is no migration runner. Add the next numbered file in `supabase/migrations/` (safe to
+re-run), add the matching `preprod_*` variant (QUALITY uses a separate `preprod` schema in the
+same Supabase project), and **tell the user to apply it in the Supabase SQL Editor** — the
+app breaks with an opaque HTTP 400 on insert if the DB lags the code.
 
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
+## Run locally
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
----
-
-## 5. Implementation Phases
-
-**Plan files live in `docs/plans/<plan-name>/`. Completed phases move to `docs/plans/<plan-name>/archive/`.**
-
-### Naming convention
-
-Phase files are numbered: `00-overview.md`, `01-<phase-name>.md`, `02-<phase-name>.md`, …
-
-- `00-overview.md` — always the index/roadmap for that plan; archive it once all phases are done.
-- Each subsequent file is one self-contained phase with a deliverables checklist of `- [ ]` checkboxes.
-
-### What "done" means
-
-A phase is done when **every checkbox in the file is checked** (`- [x]`). At that point, move the file:
-
-```
-docs/plans/<plan-name>/<phase-file>.md  →  docs/plans/<plan-name>/archive/<phase-file>.md
-```
-
-Active phases (not yet archived) are whatever files remain directly in the plan folder. To know which phase you're on, list that folder — the lowest-numbered file is the current phase. List `docs/plans/` itself for the current set of active plan folders rather than relying on a static list here — it changes every time a plan finishes.
-
----
-
-# Project: reflow
-
-An interrupt-resilient personal day-planner. One ranked task list per day that
-survives being interrupted by unplanned work — see `PRODUCT.md` for full product
-purpose, users, and the binding brand system (colors, type, tone, motion — do not
-re-derive or override, treat it as decided).
-
-## Stack
-
-Vite + React 19 + TypeScript SPA, talking directly to a hosted Supabase project
-(Postgres + Auth + Realtime) — no custom backend server. Styling is plain CSS
-(`src/styles/`), animation is `framer-motion`. No Docker, no local database.
-
-## Project structure
-
-```
-src/
-  App.tsx            top-level routing/auth gate
-  main.tsx           entry point
-  pages/             Landing, Auth, Today, History — route-level screens
-  components/        UI pieces (TaskList, TaskRow, MorningFlow, CompareDuel,
-                      BrainDump, LeftoverCard, TagInput, AddTaskFab,
-                      TaskModal, InstallPrompt, VersionBadge, BorderGlow,
-                      AppLoading, EmptyState, TaskListSkeleton, Toast,
-                      UpdateBanner, HistoryRow)
-  components/icons/  hand-written stroke icons (24px grid, 1.75px stroke — see
-                      branding.md for the icon system, don't pull in an icon lib)
-  hooks/             useAuth, useTasks, useMorningFlow, useCompareInsertion,
-                      useLongPressDrag, useInstallPrompt, useRolloverPrompt,
-                      useReducedMotion, useAppUpdate, useTheme, useToast,
-                      useHistory, useHashRoute
-  lib/               framework-free logic + its co-located *.test.ts:
-                      tasks.ts (Supabase CRUD), ranking.ts (rank-gap math),
-                      compare.ts (binary-search comparator), triage.ts
-                      (leftover keep/drop), tags.ts, swipe.ts,
-                      realtimeMerge.ts, transitions.ts, pwa.ts, supabase.ts
-                      (client init), devMock.ts (VITE_DEV_MODE bypass),
-                      validation.ts (input limits), textScale.ts
-                      (length-to-font-size tiers), theme.ts (profile
-                      theme_preference), history.ts (history date ranges,
-                      day grouping, hours parsing)
-supabase/migrations/  hand-applied SQL, run in filename order via the Supabase
-                      SQL Editor — there is no migration runner/CLI wired up
-```
-
-Business logic lives in `src/lib/*.ts` as plain functions, independent of React —
-that's what the `*.test.ts` files next to them exercise directly. Anything that
-needs a Supabase call or React state lives in `src/hooks/*.ts` instead.
-
-## Local setup (from zero)
-
-`README.md` is the canonical human-facing setup doc; this section is a terser mirror for quick
-reference — if the two ever disagree, `README.md` wins.
-
-1. `npm install` — also runs `postinstall: patch-package`, applying `patches/framer-motion+13.0.0.patch`
-2. Create a Supabase project (free tier) at supabase.com. From **Project Settings → API**, note the **Project URL** and the **publishable ("anon") key**.
-3. In the Supabase dashboard: **Authentication → Providers** — confirm Email is enabled, and leave "Confirm email" **on** (sign-up sends a confirmation link; Google/GitHub sign-in are also available, see `docs/plans/auth-oauth-and-email-confirm/archive/` for how this project's were set up).
-4. **SQL Editor** — run every file in `supabase/migrations/` in filename order, starting with `0001_tasks.sql`. Skipping a later migration leaves the DB disagreeing with the app (shows up as an opaque HTTP 400 on insert). Files are written to be safe to re-run. There is no migration CLI/runner — this is hand-applied SQL, run manually each time the schema changes.
-5. Copy `.env.example` → `.env.local` and fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (see table below). `.env.local` is gitignored — never commit real credentials.
-6. `npm run dev` — opens at `http://localhost:5173`.
-
-To test on a second device (e.g. a phone) on the same network: `npm run dev -- --host`, then open the printed "Network" URL there, signed into the same account.
-
-## Commands
+First-time setup is in `README.md`. Once set up:
 
 ```bash
-npm run dev       # vite dev server, http://localhost:5173
-npm run dev -- --host   # expose on LAN for testing on a phone
-npm run build     # tsc -b && vite build
-npm run preview   # preview the production build
-npm run test      # vitest run
-npm run lint      # oxlint
+npm run dev            # http://localhost:5173  (add -- --host to test on a phone)
+npm run build | preview | test | lint | diagrams
 ```
 
-## Environment variables (`.env.local`, gitignored)
+`.env.local` (gitignored, copy from `.env.example`): `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY` required; `VITE_SUPABASE_SCHEMA` optional (default `public`);
+`VITE_DEV_MODE=true` bypasses auth with a mock session. Never commit credentials.
 
-| Var | Purpose |
-|---|---|
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | required; from Supabase Project Settings → API |
-| `VITE_SUPABASE_SCHEMA` | optional, default `public`; DEV/QUALITY share one Supabase project split by Postgres schema (`dev`/`preprod`) — see `devops-workflow` skill |
-| `VITE_DEV_MODE=true` | optional; bypasses real Supabase auth with a mock session + seeded tasks (`src/lib/devMock.ts`) — no Supabase project needed at all, useful for UI checks/browser automation |
+## Hosting and deploy
 
-## Environments & deployment
+Three environments — DEV, QUALITY (preprod), PROD — each its own Vercel project, all
+backed by hosted Supabase (DEV and QUALITY share a project, split by Postgres schema).
+Flow: `feature/*` → `dev` → PR → `main`. A push to `main` runs `release.yml`, which builds
+and creates one Octopus release that is promoted dev → preprod → prod inside Octopus.
 
-Three environments (DEV/QUALITY/PROD), each its own Vercel project, promoted by
-**Octopus Deploy** from one build produced on `main`. Full branching model,
-who-can-merge-what rules, and CI/CD pipeline design live in the **`devops-workflow`
-skill** (`.claude/skills/devops-workflow/SKILL.md`) — invoke it rather than
-re-deriving this from scratch when merging, deploying, or touching
-`.github/workflows/*`. The pipeline is built and in use; the rollout history and
-the open items left behind are in `docs/plans/devops-setup/archive/00-overview.md`
-(archived — see `docs/BACKLOG.md` for the still-open ones).
+Hard rules (details in the `devops-workflow` skill):
+- Never push to `main` and never merge `dev` → `main` — human only. You may open the PR.
+- Merging `feature/*` → `dev` needs explicit user confirmation.
+- Never force-push; never delete branches without confirmation.
 
-## Other docs in this repo
+## Plans
 
-- `README.md` — human setup instructions (Supabase project creation, migrations, env vars). Read this, not CLAUDE.md, for "how do I get this running from zero."
-- `PRODUCT.md` — product purpose, target user, positioning, and the **binding** brand system reference (colors/type/tone/motion decided elsewhere in `branding.md`). Schema-managed by the `impeccable` skill — don't hand-edit its structure.
-- `branding.md` — full pinned visual identity system (logo, palette, type, iconography, motion timing). Binding, not inspiration.
-- `docs/idea.md` — original problem-framing draft PRODUCT.md was built from; historical record.
-- `docs/ARCHITECTURE.md` — living "how this app works" reference: data model, module map, and cross-cutting patterns (optimistic mutations, realtime sync, ranking/duel, morning flow), derived from current code.
-- `docs/BACKLOG.md` — open ideas and unresolved polish items not yet turned into a phase plan.
-- `.claude/skills/docs-maintenance/SKILL.md` — keeps `docs/ARCHITECTURE.md`, `docs/BACKLOG.md`,
-  and this file's project-structure tree in sync with the code; invoked automatically when a
-  task finishes rather than needing to be asked for each time.
+Plans live in `docs/plans/<plan-name>/` as `00-overview.md` (roadmap) plus numbered phase
+files, each with a `- [ ]` deliverables checklist. A phase is done when every box is checked;
+then move it to `docs/plans/<plan-name>/archive/`. The current phase is the lowest-numbered
+file left in the plan folder. List `docs/plans/` for what's active — don't trust a static
+list. Each phase gets its own feature branch.
+
+## Working style
+
+- State assumptions; if the request has several plausible readings, say so and ask rather
+  than silently picking one.
+- Smallest change that solves the problem. No speculative features, abstractions or
+  error handling for impossible cases.
+- Surgical diffs: every changed line traces to the request. Mention unrelated dead code or
+  bugs you notice; don't fix them unasked. Remove only orphans your own change created.
+- Turn tasks into checkable goals (failing test → make it pass) and verify before
+  reporting done. Report failures and skipped steps honestly.
