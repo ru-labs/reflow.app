@@ -1,4 +1,5 @@
 # Plain HTTP inside the Docker network; Traefik (Dokploy) terminates TLS.
+# (auto-deploy test)
 :80 {
     root * /srv/www
     encode zstd gzip
