@@ -1,0 +1,13 @@
+# Plain HTTP inside the Docker network; Traefik (Dokploy) terminates TLS.
+:80 {
+    root * /srv/www
+    encode zstd gzip
+
+    @nocache path /index.html /sw.js /registerSW.js /manifest.webmanifest
+    header @nocache Cache-Control "no-cache"
+    @assets path /assets/*
+    header @assets Cache-Control "public, max-age=31536000, immutable"
+
+    try_files {path} /index.html
+    file_server
+}

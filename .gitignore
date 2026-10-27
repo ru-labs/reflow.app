@@ -11,3 +11,4 @@ board.json
 ${userHome}/*
 .vscode
 .env*
+!deploy/selfhost/.env.example
