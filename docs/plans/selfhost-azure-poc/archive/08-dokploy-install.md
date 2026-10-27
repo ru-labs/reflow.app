@@ -62,7 +62,7 @@ over HTTPS, so the panel needs a public domain. 2FA is what protects it.
 ## Housekeeping settings
 
 - [x] **[you]** Turn on Dokploy's **daily Docker cleanup** (server settings). It removes unused images and build cache, which keeps the 30 GB disk from filling up with old builds.
-- [ ] **[you]** Leave Dokploy's own server **monitoring** off for now (it's an extra container). Phase 14 has its own monitoring script.
+- [x] **[you]** Leave Dokploy's own server **monitoring** off for now (it's an extra container). Phase 14 has its own monitoring script.
 
 ## Run notes (what differed from the plan)
 
@@ -72,11 +72,12 @@ over HTTPS, so the panel needs a public domain. 2FA is what protects it.
 - The company laptop's network resolves `dokploy.usereflow.app` to `13.49.92.31`, not our server. Flushing the DNS cache didn't help. Cellular and Chrome work. Not a server problem.
 - Safari on the phone showed "server not found" right after the record was created (cached negative DNS answer). Chrome on cellular worked, and home Wi-Fi works now.
 - Dokploy version: `v0.30.8`.
-- Step 21 (monitoring off): no monitoring toggle found on the Settings page yet. Still to confirm.
+- RAM baseline (4 GiB VM): panel 898 MiB, Traefik 54 MiB, Dokploy Postgres 37 MiB (~989 MiB total, above the 350–600 MB estimate); `reflow-db-1` 44 MiB; 2159 MB available, swap unused.
+- Monitoring: decided to leave Dokploy's server monitoring off (extra container). Phase 14 has its own monitoring script. Step closed.
 
 ## Verify
 
-- [ ] **[you]** Baseline after install: `free -m` and `docker stats --no-stream`. Put Dokploy's total RAM (panel + its Postgres + Traefik) in the session log. Expect roughly 350–600 MB.
-- [ ] **[you]** `sudo reboot` → after ~1 min `https://dokploy.usereflow.app` works again and `reflow-db-1` is healthy, with nothing restarted by hand.
-- [ ] **[you]** *Laptop:* the phase-05 DB tunnel still works: `ssh -N -L 15432:localhost:5432 reflow-vm`, then connect to `reflow_dev` on `localhost:15432`.
-- [ ] **[you]** Session log line, then move this file to `archive/`.
+- [x] **[you]** Baseline after install: `free -m` and `docker stats --no-stream`. Put Dokploy's total RAM (panel + its Postgres + Traefik) in the session log. Expect roughly 350–600 MB.
+- [x] **[you]** `sudo reboot` → after ~1 min `https://dokploy.usereflow.app` works again and `reflow-db-1` is healthy, with nothing restarted by hand.
+- [x] **[you]** *Laptop:* the phase-05 DB tunnel still works: `ssh -N -L 15432:localhost:5432 reflow-vm`, then connect to `reflow_dev` on `localhost:15432`.
+- [x] **[you]** Session log line, then move this file to `archive/`.
