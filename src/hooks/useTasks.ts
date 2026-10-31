@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import { backend } from '@backend';
+import type { AppSession } from '../lib/backend/types';
 import { listActiveTasks, createTask, updateTask, updateTaskStatus, updateTaskRanks, markTriaged, hasCompletedToday, normalizeTask, type Task } from '../lib/tasks';
 import { rankBetween, renumber } from '../lib/ranking';
 import { upsertActiveTask } from '../lib/realtimeMerge';
-import { supabase } from '../lib/supabase';
 import { DEV_MODE, mockTasksApi } from '../lib/devMock';
 
 /** Network failures (offline, DNS, timeout) surface as TypeError from fetch — distinguish
@@ -19,7 +19,7 @@ export function describeFailure(action: string, err: unknown): string {
     : `${action} — something went wrong on our end, try again in a bit`;
 }
 
-export function useTasks(session: Session | null) {
+export function useTasks(session: AppSession | null) {
   const userId = session?.user.id;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,30 +72,16 @@ export function useTasks(session: Session | null) {
   useEffect(() => {
     if (!userId || DEV_MODE) return;
 
-    const channel = supabase
-      .channel(`tasks-changes-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          if (payload.eventType === 'DELETE') return; // the app never deletes rows, only changes status
-          // Skip realtime updates during drag to prevent the server's stale ranks from
-          // fighting the in-progress visual reorder. commitReorder clears preReorderTasks.
-          if (preReorderTasks.current) return;
-          setTasks((prev) => upsertActiveTask(prev, normalizeTask(payload.new as Task)));
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setRealtimeStale(true);
-        } else if (status === 'SUBSCRIBED') {
-          setRealtimeStale(false);
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return backend.subscribeTaskChanges(
+      userId,
+      (row) => {
+        // Skip realtime updates during drag to prevent the server's stale ranks from
+        // fighting the in-progress visual reorder. commitReorder clears preReorderTasks.
+        if (preReorderTasks.current) return;
+        setTasks((prev) => upsertActiveTask(prev, normalizeTask(row)));
+      },
+      (status) => setRealtimeStale(status === 'stale'),
+    );
   }, [userId]);
 
   async function addTask(title: string, tags: string[] = []) {

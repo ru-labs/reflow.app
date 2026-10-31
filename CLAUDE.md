@@ -20,7 +20,7 @@ Don't re-explore the repo from scratch; read the doc that matches the task first
 ## Stack and where things live
 
 Vite + React 19 + TypeScript SPA → hosted Supabase (Postgres + Auth + Realtime). **No custom
-backend today.** Plain CSS in `src/styles/`, animation via `framer-motion` (patched, see
+backend in production today** (the `server/` API and `VITE_BACKEND=selfhosted` build are a PoC, below). Plain CSS in `src/styles/`, animation via `framer-motion` (patched, see
 `patches/`), hand-written icons in `src/components/icons/` (no icon library).
 
 | Area | Path |
@@ -30,6 +30,8 @@ backend today.** Plain CSS in `src/styles/`, animation via `framer-motion` (patc
 | UI pieces | `src/components/` |
 | Supabase calls + React state | `src/hooks/` |
 | Pure logic + co-located `*.test.ts` | `src/lib/` |
+| Data layer (Supabase / self-hosted, picked at build by `VITE_BACKEND`) | `src/lib/backend/` |
+| Self-hosted PoC API (own npm package) | `server/` |
 | DB schema | `supabase/migrations/` (hand-applied SQL) |
 | CI/CD | `.github/workflows/release.yml` |
 | Diagrams (generated SVG) | `scripts/diagrams/` → `docs/diagrams/` via `npm run diagrams` |

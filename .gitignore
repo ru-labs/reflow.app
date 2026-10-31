@@ -13,3 +13,4 @@ ${userHome}/*
 .env*
 !deploy/selfhost/.env.example
 !server/.env.example
+!.env.selfhosted

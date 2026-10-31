@@ -1,3 +1,4 @@
+import type { AppSession } from './backend/types';
 import type { Task } from './tasks';
 
 /**
@@ -10,10 +11,9 @@ export const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 const DEV_USER_ID = 'dev-mock-user';
 
-export const mockSession = {
+export const mockSession: AppSession = {
   user: { id: DEV_USER_ID, email: 'dev@reflow.local' },
-  access_token: 'dev-mock-token',
-} as unknown as import('@supabase/supabase-js').Session;
+};
 
 const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 const today = new Date().toISOString().slice(0, 10);

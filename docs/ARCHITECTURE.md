@@ -70,9 +70,10 @@ in `lib`.
 - `history.ts` — history date ranges (presets, Monday-start weeks, inclusive custom range), group-by-local-day with hours totals, hours-input parsing (§8)
 
 **I/O / environment-dependent:**
-- `tasks.ts` — all Supabase CRUD for the `tasks` table (incl. the history queries: `listClosedTasks`, `updateTaskHours`, `lastActiveRank`, `reopenTask`)
-- `supabase.ts` — client init (`createClient`, schema selected via `VITE_SUPABASE_SCHEMA`)
-- `theme.ts` — reads/writes `profiles.theme_preference`
+- `tasks.ts` — the 12 task CRUD functions (incl. the history queries: `listClosedTasks`, `updateTaskHours`, `lastActiveRank`, `reopenTask`), re-exported from the active backend (below); also re-exports `Task`/`normalizeTask`
+- `supabase.ts` — client init (`createClient`, schema selected via `VITE_SUPABASE_SCHEMA`); only the Supabase backend imports it
+- `theme.ts` — `getThemePreference`/`setThemePreference` (`profiles.theme_preference`), re-exported from the active backend
+- `backend/` — the data layer behind one `Backend` interface (`types.ts`: auth, tasks, profile, `subscribeTaskChanges`, plus the `Task`/`AppSession` types). `supabase.ts` is the default; `selfhosted.ts` calls the `server/` API (`/api/*`, cookie session, SSE). `VITE_BACKEND` (default `supabase`) picks one at build time via the `@backend` alias in `vite.config.ts`, so the other never enters the bundle (`npm run build:selfhosted` uses `--mode selfhosted`, whose `.env.selfhosted` sets it). `server/` is the self-hosted PoC API (Fastify + Postgres, see `docs/plans/selfhost-azure-poc/`), its own package.
 - `devMock.ts` — `VITE_DEV_MODE` bypass: mock session + in-memory task list mirroring `tasks.ts`'s API shape, so hooks can call either without branching on shape (only on which one to call)
 
 `src/hooks/*.ts`: `useAuth` (session state, sign-in/up/out, OAuth), `useTasks` (§3, the task list and
@@ -102,8 +103,7 @@ reusing `useTasks`'s exported `describeFailure` for the wording.
 
 ## 4. Realtime sync
 
-`useTasks` opens one Supabase Realtime channel per user (`tasks-changes-${userId}`, skipped entirely
-in `DEV_MODE`), listening for any `postgres_changes` event on `tasks` filtered to that user. Each
+`useTasks` calls `backend.subscribeTaskChanges` (skipped entirely in `DEV_MODE`). The Supabase backend opens one Realtime channel per user (`tasks-changes-${userId}`) listening for `postgres_changes` on `tasks` filtered to that user; the self-hosted backend opens an `EventSource` on `/api/tasks/stream` (fed by Postgres `LISTEN/NOTIFY`). Both report `live`/`stale` and emit changed rows. Each
 incoming row goes through `realtimeMerge.ts`'s `upsertActiveTask`: removes any existing row with that
 id, then re-inserts it in rank order if `status === 'active'` (drops it from local state otherwise —
 covers done/dropped arriving from another tab/device). DELETE events are ignored outright; the app
@@ -163,7 +163,7 @@ triggered once per day (see `useRolloverPrompt`) or manually:
 
 ## 7. Auth & dev mode
 
-Real auth is Supabase Auth (`useAuth.ts`): email/password plus Google/GitHub OAuth. Initial session
+Real auth goes through `backend.auth` (`useAuth.ts`). Supabase Auth: email/password plus Google/GitHub OAuth; the self-hosted backend: email/password only (`supportsOAuth: false` hides the OAuth buttons). Initial session
 state deliberately does **not** use `supabase.auth.getSession()` — that reads straight from
 `localStorage` and can resolve before the client has validated/refreshed the token server-side, which
 was observed racing a PostgREST request into a spurious RLS rejection right after sign-in. Instead

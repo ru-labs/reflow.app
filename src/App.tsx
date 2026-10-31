@@ -50,7 +50,7 @@ function App() {
       </AnimatePresence>
       <UpdateBanner />
       <VersionBadge />
-      <Analytics />
+      {import.meta.env.VITE_BACKEND !== 'selfhosted' && <Analytics />}
     </>
   );
 }

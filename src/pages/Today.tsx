@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import type { AppSession } from '../lib/backend/types';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTasks } from '../hooks/useTasks';
@@ -26,7 +26,7 @@ import { ThemeToggle } from '../components/icons/ThemeToggle';
 import type { Task } from '../lib/tasks';
 import { allKnownTags } from '../lib/tags';
 
-export function Today({ session, isDark, toggleTheme }: { session: Session; isDark: boolean; toggleTheme: () => void }) {
+export function Today({ session, isDark, toggleTheme }: { session: AppSession; isDark: boolean; toggleTheme: () => void }) {
   const {
     tasks, loading, error, dismissError, completedToday, realtimeStale, addTask, completeTask, editTask, dropTask,
     reorderTasks, commitReorder, insertTaskAtIndex, keepLeftover,

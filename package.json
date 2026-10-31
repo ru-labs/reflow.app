@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:selfhosted": "tsc -b && vite build --mode selfhosted",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

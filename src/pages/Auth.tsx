@@ -38,7 +38,7 @@ function toBrandVoice(message: string, mode: 'signin' | 'signup'): string {
 }
 
 export function Auth({ onBack }: AuthProps) {
-  const { signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithGithub, supportsOAuth } = useAuth();
   const reducedMotion = useReducedMotion();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -143,7 +143,7 @@ export function Auth({ onBack }: AuthProps) {
             </form>
             )}
 
-            {!confirmationSent && (
+            {!confirmationSent && supportsOAuth && (
               <>
                 <div className="auth-divider" role="separator">
                   <span>or</span>
