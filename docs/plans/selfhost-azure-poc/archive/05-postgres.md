@@ -59,7 +59,7 @@ The DB stays empty for now.
 
 - [x] **[you]** In PowerShell: `ssh -N -L 15432:localhost:5432 reflow-vm` (leave running). Or in VS Code Remote: *Ports* panel → *Forward a Port* → `5432`.
 - [x] **[you]** Connect with any client (DBeaver, pgAdmin, or `psql`): host `localhost`, port `15432`, user `reflow`, db `reflow_dev`, password from `/opt/reflow/.env`. You should see an empty DB.
-- [ ] **[you]** Hand the agent the connection details it needs in **its local, gitignored** `server/.env`, *not* in chat logs or the plan: `DATABASE_URL=postgres://reflow:<pw>@localhost:15432/reflow_dev` and `TEST_DATABASE_URL=…/reflow_test`.
+- [x] **[you]** Hand the agent the connection details it needs in **its local, gitignored** `server/.env`, *not* in chat logs or the plan: `DATABASE_URL=postgres://reflow:<pw>@localhost:15432/reflow_dev` and `TEST_DATABASE_URL=…/reflow_test`.
 
 ## Nightly backup (PoC-grade: same disk, 7 days)
 

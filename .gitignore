@@ -12,3 +12,4 @@ ${userHome}/*
 .vscode
 .env*
 !deploy/selfhost/.env.example
+!server/.env.example

@@ -78,7 +78,7 @@ no CORS and auth can use an httpOnly session cookie.
 | VM private IP | `172.16.0.4` (`eth0`, `172.16.0.0/24`). Swarm advertise address |
 | Docker overlay subnets | `ingress` `10.0.0.0/24`, `dokploy-network` `10.0.1.0/24`. No overlap with the VM subnet |
 | Dokploy panel | `https://dokploy.usereflow.app` (phase 08), version: `v0.30.8` |
-| Dokploy compose project | ___ (phase 09; used in `docker exec` commands as `<project>`) |
+| Dokploy compose project | `reflowpoc-reflow-edbr4g` (used in `docker exec` commands as `<project>`) |
 | Repo (for Dokploy GitHub App) | `ru-labs/reflow.app` (public) |
 | Where secrets live | Dokploy → `reflow` compose → *Environment* (app env). VM: `/opt/reflow/.env` (chmod 600) as the offline record of `POSTGRES_PASSWORD`. CI: GitHub Actions secrets `SELFHOST_*` |
 
@@ -90,11 +90,11 @@ no CORS and auth can use an httpOnly session cookie.
 | `02-azure-config.md` | Auto-shutdown off, static IP, NSG, budget, alerts | you | ☑ |
 | `03-remote-ssh.md` | SSH config + VS Code Remote-SSH | you | ☑ |
 | `04-os-baseline.md` | Updates, swap, firewall, fail2ban, Docker | you | ☑ |
-| `05-postgres.md` | Postgres 17 in Docker, backups, tunnel | you | ☐ (one item open: `server/.env`, needs phase 10) |
+| `05-postgres.md` | Postgres 17 in Docker, backups, tunnel | you | ☑ |
 | `06-host-current-app.md` | Serve the **current** (Supabase) build via Caddy on the VM IP | you | ☑ |
 | `07-subdomain-https.md` | `self.usereflow.app` + automatic HTTPS | you | ☑ |
-| `08-dokploy-install.md` | Retire Caddy, install Dokploy, panel on `dokploy.usereflow.app` + 2FA | you | ☐ |
-| `09-dokploy-current-app.md` | Current app + Postgres as a Dokploy Compose service, git push-to-deploy, build cost measured | agent + you | ☐ |
+| `08-dokploy-install.md` | Retire Caddy, install Dokploy, panel on `dokploy.usereflow.app` + 2FA | you | ☑ |
+| `09-dokploy-current-app.md` | Current app + Postgres as a Dokploy Compose service, git push-to-deploy, build cost measured | agent + you | ☑ |
 | `10-backend-api.md` | `server/`: Fastify API, schema, auth, SSE, tests | agent | ☐ |
 | `11-frontend-data-layer.md` | Build-time switch `VITE_BACKEND`, self-hosted adapter | agent | ☐ |
 | `12-first-selfhosted-deploy.md` | Add `api` to the compose, switch env → **🎯 working self-hosted demo** | you + agent | ☐ |
@@ -130,3 +130,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-10-27 | 08 | Done and verified. Second PC added with its own SSH key (`reflow_azure`, added via portal *Reset password → Add SSH public key*); `ssh reflow-vm` works from both PCs. RAM baseline: Dokploy ≈ 989 MiB (panel 898, Traefik 54, its Postgres 37), `reflow-db-1` 44 MiB, 2159 MB available, swap unused. Reboot check passed: panel back at `https://dokploy.usereflow.app`, `reflow-db-1` healthy on 127.0.0.1:5432. DB tunnel `localhost:15432` reachable. Archived. |
 | 2026-10-27 | 09 | Done. **Milestone 1b:** `https://self.usereflow.app` runs from git under Dokploy (Compose service `reflow`, project `reflowpoc-reflow-edbr4g`, branch `feature/selfhost-poc`, Auto Deploy on). `reflow_pgdata` reused: `reflow`, `reflow_dev`, `reflow_test` intact. On-VM build ≈ 30 s cold, peak 2075 MB (+~475 MB over idle 1600), swap untouched: builds can stay on the VM. First LE cert request timed out during the build; `docker restart dokploy-traefik` fixed it. Isolated Deployment is deprecated in v0.30.8 but survived the reboot. Backup cron moved to label lookup, old compose/Caddy retired. Archived. |
 | 2026-10-16 | 08–09 (new) | VM resized to **Standard_B2ls_v2** (2 vCPU, 4 GiB). Decided to manage the VM with **Dokploy** (D12–D15). Added `08-dokploy-install.md` + `09-dokploy-current-app.md`; old 08–13 renumbered to 10–15; phases 12 (first deploy) and 13 (pipeline) rewritten for Dokploy (no SSH/rsync deploys, no port-22 decision); 14/15 adjusted. Repo is public (`ru-labs/reflow.app`), so cloning needs no deploy key. |
+| 2026-10-31 | 10 | `server/` written and green: `npm run migrate` applies `0001_init.sql` twice (second is a no-op), 23 server tests pass (auth, isolation, validation, queries, atomic ranks, rate limit, SSE); root lint/test/build unchanged. Live Supabase DEV and PROD `public` schemas checked via MCP: identical to the repo migrations. `forceCloseConnections: true` so shutdown doesn't hang on SSE/keep-alive. Not yet done: commit, Docker image build (no local Docker; first build happens in phase 12). Notes for later: client must send `Content-Type: application/json` incl. signout (`{}`); Caddy must trust Traefik for `X-Forwarded-For`; refetch on SSE reconnect. |
