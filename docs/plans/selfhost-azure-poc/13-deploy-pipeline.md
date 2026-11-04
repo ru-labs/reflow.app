@@ -23,7 +23,7 @@ Read the build numbers from the session log (phases 09 and 12), then pick:
 - [x] **[you]** Dokploy → Profile → **API / CLI** → generate a token named `github-actions`.
 - [x] **[you]** Find the compose ID: open the `reflow` compose service in Dokploy (it's in the URL), or call `GET https://dokploy.usereflow.app/api/project.all` with header `x-api-key: <token>`.
 - [x] **[you]** GitHub → repo → *Settings → Secrets and variables → Actions* → add `SELFHOST_DOKPLOY_URL` (`https://dokploy.usereflow.app`), `SELFHOST_DOKPLOY_TOKEN`, and `SELFHOST_COMPOSE_ID`.
-- [ ] **[you]** Dokploy → compose → **Auto Deploy off**. From now on, only the workflow deploys.
+- [x] **[you]** Dokploy → compose → **Auto Deploy off**. From now on, only the workflow deploys.
 
 ## Workflow `.github/workflows/selfhost-deploy.yml` [agent]
 
@@ -42,9 +42,16 @@ Read the build numbers from the session log (phases 09 and 12), then pick:
 
 ## Verify [you]
 
-- [ ] **[you]** GitHub → *Actions* → *selfhost-deploy* → *Run workflow*. All jobs are green, and Dokploy shows a new deployment started by the API.
-- [ ] **[you]** `/api/health` shows the expected version, and so does the version badge (B: `selfhost.<run>`; A: whatever `APP_VERSION`/`VITE_APP_VERSION` is set to in Dokploy).
+- [x] **[you]** (ran via the push trigger, see deviation below) GitHub → *Actions* → *selfhost-deploy* → *Run workflow*. All jobs are green, and Dokploy shows a new deployment started by the API.
+- [x] **[you]** `/api/health` shows the expected version, and so does the version badge (B: `selfhost.<run>`; A: whatever `APP_VERSION`/`VITE_APP_VERSION` is set to in Dokploy).
 - [ ] **[you]** Make a deliberately failing test on a throwaway commit → the workflow stops at `test` and **nothing is deployed**. Revert it.
 - [ ] **[you]** Change something visible (e.g. a copy tweak), deploy, and see it live. Then roll back (A: revert + deploy; B: the rollback workflow with the previous sha) and see it revert.
 - [ ] **[you]** Existing data survived both deploys (the tasks from phase 12 are still there).
 - [ ] **[you]** Session log line, then move this file to `archive/`.
+
+## Status notes (2026-11-04)
+
+- **Deviation:** the workflow also triggers on `push` to `feature/selfhost-poc` (docs/`*.md` ignored). GitHub only offers "Run workflow" for files on the default branch, and this file lives on the feature branch. So every push to the branch runs tests, then deploys if they pass. Revisit once the PoC is merged: remove the push trigger if you want it manual-only.
+- CI needed dummy `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` for the unit tests (`tasks.test.ts` imports the Supabase backend, which throws without them).
+- First green run verified end to end: tests, Dokploy API deploy, health gate; the app and the phase-12 data are intact.
+- **Still open:** the failing-test check (a broken test must stop at `test` with nothing deployed), the visible-change + rollback check (revert + push), and the final session-log line, then archive. Option B and the rollback workflow are skipped (option A).
