@@ -1,0 +1,114 @@
+name: Selfhost deploy
+
+# Manual only during the PoC. Run it on the branch Dokploy builds (feature/selfhost-poc):
+# Dokploy builds that branch's head, so the tests must run on the same commit.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selfhost-deploy
+  cancel-in-progress: false
+
+env:
+  HEALTH_URL: https://self.usereflow.app/api/health
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: reflow
+          POSTGRES_PASSWORD: reflow
+          POSTGRES_DB: reflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U reflow -d reflow_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+
+      - name: App tests and lint
+        run: |
+          npm ci
+          npm run test
+          npm run lint
+
+      - name: Server tests
+        working-directory: server
+        env:
+          TEST_DATABASE_URL: postgres://reflow:reflow@localhost:5432/reflow_test
+        run: |
+          npm ci
+          npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: selfhost-poc
+    env:
+      DOKPLOY_URL: ${{ secrets.SELFHOST_DOKPLOY_URL }}
+      DOKPLOY_TOKEN: ${{ secrets.SELFHOST_DOKPLOY_TOKEN }}
+      COMPOSE_ID: ${{ secrets.SELFHOST_COMPOSE_ID }}
+    steps:
+      - name: Trigger the Dokploy deployment
+        run: |
+          latest() {
+            curl -sS --fail-with-body -H "x-api-key: $DOKPLOY_TOKEN" \
+              "$DOKPLOY_URL/api/deployment.allByCompose?composeId=$COMPOSE_ID" |
+              jq -r 'sort_by(.createdAt) | last // {} | [(.deploymentId // ""), (.status // "")] | @tsv'
+          }
+          before=$(latest | cut -f1)
+          echo "before=$before" >> "$GITHUB_ENV"
+
+          curl -sS --fail-with-body -X POST \
+            -H "x-api-key: $DOKPLOY_TOKEN" -H "Content-Type: application/json" \
+            -d "{\"composeId\":\"$COMPOSE_ID\",\"title\":\"GitHub Actions run ${{ github.run_number }}\"}" \
+            "$DOKPLOY_URL/api/compose.deploy"
+          echo
+
+      - name: Wait for the deployment to finish
+        run: |
+          latest() {
+            curl -sS --fail-with-body -H "x-api-key: $DOKPLOY_TOKEN" \
+              "$DOKPLOY_URL/api/deployment.allByCompose?composeId=$COMPOSE_ID" |
+              jq -r 'sort_by(.createdAt) | last // {} | [(.deploymentId // ""), (.status // "")] | @tsv'
+          }
+          # 20 min timeout: the build happens on the VM
+          for i in $(seq 1 120); do
+            IFS=$'\t' read -r id status <<< "$(latest)"
+            if [ -n "$id" ] && [ "$id" != "$before" ]; then
+              echo "deployment $id: $status"
+              case "$status" in
+                done) exit 0 ;;
+                error) echo "Dokploy deployment failed"; exit 1 ;;
+              esac
+            else
+              echo "waiting for the new deployment to appear"
+            fi
+            sleep 10
+          done
+          echo "timed out waiting for the deployment"; exit 1
+
+      - name: Health gate
+        run: |
+          for i in $(seq 1 12); do
+            if curl -sS --fail-with-body "$HEALTH_URL" | jq -e '.ok == true'; then exit 0; fi
+            sleep 5
+          done
+          echo "health check failed"; exit 1
