@@ -1,8 +1,14 @@
 name: Selfhost deploy
 
-# Manual only during the PoC. Run it on the branch Dokploy builds (feature/selfhost-poc):
-# Dokploy builds that branch's head, so the tests must run on the same commit.
+# Dokploy builds the head of feature/selfhost-poc, so the tests must run on that same commit.
+# The push trigger is needed because GitHub only offers "Run workflow" for files on the
+# default branch; this one lives on the feature branch until the PoC is merged.
 on:
+  push:
+    branches: [feature/selfhost-poc]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
   workflow_dispatch:
 
 permissions:
