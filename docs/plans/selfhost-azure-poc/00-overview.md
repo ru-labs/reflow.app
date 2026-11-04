@@ -95,9 +95,9 @@ no CORS and auth can use an httpOnly session cookie.
 | `07-subdomain-https.md` | `self.usereflow.app` + automatic HTTPS | you | ☑ |
 | `08-dokploy-install.md` | Retire Caddy, install Dokploy, panel on `dokploy.usereflow.app` + 2FA | you | ☑ |
 | `09-dokploy-current-app.md` | Current app + Postgres as a Dokploy Compose service, git push-to-deploy, build cost measured | agent + you | ☑ |
-| `10-backend-api.md` | `server/`: Fastify API, schema, auth, SSE, tests | agent | ☐ |
+| `10-backend-api.md` | `server/`: Fastify API, schema, auth, SSE, tests | agent | ☑ |
 | `11-frontend-data-layer.md` | Build-time switch `VITE_BACKEND`, self-hosted adapter | agent | ☐ |
-| `12-first-selfhosted-deploy.md` | Add `api` to the compose, switch env → **🎯 working self-hosted demo** | you + agent | ☐ |
+| `12-first-selfhosted-deploy.md` | Add `api` to the compose, switch env → **🎯 working self-hosted demo** | you + agent | ☑ |
 | `13-deploy-pipeline.md` | GitHub Actions (tests) → Dokploy API deploy, health gate, rollback | agent + you | ☐ |
 | `14-load-test.md` | k6: 10 / 100 / 1000 users, monitoring, report | agent + you | ☐ |
 | `15-prod-cutover-outline.md` | Go/no-go criteria + cutover runbook (outline) | later | ☐ |
@@ -134,3 +134,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-10-31 | 10 | Committed (056bf08). Phase 10 file stays until merge; no blockers. |
 | 2026-10-31 | 11 | Code done: `src/lib/backend/{types,supabase,selfhosted}.ts`, `@backend` alias (vite/vitest/tsconfig), hooks/Auth/App/Today/devMock switched to `AppSession` + `backend`, `build:selfhosted`, `.env.selfhosted`. Deviation: `Task`/`normalizeTask` live in `backend/types.ts` (re-exported by `tasks.ts`) to avoid an import cycle. Verified: lint, 104 tests, both builds; default dist has no `/api/tasks`, selfhosted dist/assets has no "supabase". Docs updated (ARCHITECTURE, CLAUDE.md). Open: manual end-to-end + DEV_MODE check by user, then commit and archive. |
 | 2026-11-01 | 11 | Committed with manual tests still pending (paused by user). Resume: run the DEV_MODE check and the local end-to-end from `11-frontend-data-layer.md` (tunnel, `server` `npm run dev`, `npx vite --mode selfhosted`, second-profile SSE check), fix any bugs, tick the boxes and archive the file. Then phase 12 (first self-hosted deploy: `api` service in `deploy/selfhost/compose.yaml`, `/api` route in Caddyfile with Caddy trusting Traefik `X-Forwarded-For`, `VITE_BACKEND=selfhosted`, first server image build on the VM). |
+| 2026-11-04 | 12 | Done. 🎯 Milestone 2: `https://self.usereflow.app` runs the self-hosted build + API on the VM Postgres, no Supabase. Deploy ~42 s. Bug found: `.dockerignore` excluded `.env*`, so `.env.selfhosted` never reached the build and the Supabase backend was bundled; fixed with `!.env.selfhosted` (80abe71). Smoke tests all passed (auth, duel, reorder, history/hours, theme, SSE cross-device, isolation, data in VM Postgres, reboot). Phase 10 archived. Phase 11 stays open only for the `VITE_DEV_MODE` mock check. |

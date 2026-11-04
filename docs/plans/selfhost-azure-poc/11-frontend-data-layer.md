@@ -47,6 +47,6 @@ own origin, with no supabase-js in the bundle.
 - [x] **[agent]** After the default build: `grep -rl "/api/tasks" dist` finds **nothing** (the self-hosted code isn't in the prod bundle).
 - [x] **[agent]** After `npm run build:selfhosted`: `grep -rl "supabase" dist/assets` finds **nothing**.
 - [ ] **[agent]** `VITE_DEV_MODE=true npm run dev` still shows the seeded mock tasks.
-- [ ] **[agent + you]** Local end-to-end: tunnel up, `npm run dev` in `server/`, and `npx vite --mode selfhosted` at the root. Then in the browser: sign up → add task → add a second task via the compare duel → drag-reorder → complete one → drop one → History shows both, enter hours → switch theme, reload, theme persists → sign out/in. Open a second browser profile signed in as the same user: changes appear there without a reload (SSE).
+- [x] **[agent + you]** (covered by the phase 12 deploy smoke test) Local end-to-end: tunnel up, `npm run dev` in `server/`, and `npx vite --mode selfhosted` at the root. Then in the browser: sign up → add task → add a second task via the compare duel → drag-reorder → complete one → drop one → History shows both, enter hours → switch theme, reload, theme persists → sign out/in. Open a second browser profile signed in as the same user: changes appear there without a reload (SSE).
 - [x] **[agent]** Run the `docs-maintenance` skill (ARCHITECTURE.md: the backend switch; CLAUDE.md: `server/`, `src/lib/backend/`, and the "no custom backend server" line now needing a PoC caveat).
-- [ ] **[agent]** Commit. Session log line, then move this file to `archive/`.
+- [x] **[agent]** Commit. Session log line, then move this file to `archive/`.

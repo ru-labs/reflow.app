@@ -80,4 +80,4 @@ sends dates, exactly as the current code does.
 - [x] **[agent]** `closed` range bounds are `[from, to)`. `completed-since` is true/false correctly. Bulk ranks are atomic: one bad id → nothing updated.
 - [x] **[agent]** SSE: open a stream as user A, PATCH A's task → the event arrives within 2 s. A PATCH by user B produces no event on A's stream.
 - [x] **[agent]** `npm test` in `server/` is green. Root `npm run test && npm run lint && npm run build` is still green.
-- [ ] **[agent]** Commit on `feature/selfhost-poc`. Session log line, then move this file to `archive/`.
+- [x] **[agent]** Commit on `feature/selfhost-poc`. Session log line, then move this file to `archive/`.
