@@ -11,7 +11,7 @@ probably splitting it into several phase files (`15-…`, `16-…`).
 - [ ] Off-VM backups: nightly `pg_dump` copied to Azure Blob Storage (azcopy + a SAS token), with a **tested restore**. Alternative: Dokploy's volume backups to an S3-compatible destination (Azure Blob isn't S3-compatible; e.g. Cloudflare R2). Also back up Dokploy itself (`/etc/dokploy` + its Postgres), or at least document how to rebuild it.
 - [ ] Uptime monitoring on `/api/health` (e.g. UptimeRobot / Better Stack) alerting your phone.
 - [ ] VM size decided from phase 14 (a B-series credit bank isn't a 24/7 guarantee).
-- [ ] Deployment brought in line with DEV/QUALITY/PROD. Either keep Dokploy (phase 13) and add a QUALITY compose service (own DB + domain, same compose file), or put Octopus in front of it (Octopus step calling the Dokploy API, or a Linux Tentacle in polling mode). Revisit the `devops-workflow` skill.
+- [ ] Deployment brought in line with DEV/QUALITY/PROD. Phase 13a already runs `test` + `prod` as two Dokploy compose services with their own DBs; the cutover moves the `prod` domain to `usereflow.app` and retires Vercel/Supabase. Alternative: put Octopus in front of it (Octopus step calling the Dokploy API, or a Linux Tentacle in polling mode). Revisit the `devops-workflow` skill.
 - [ ] Rate limiting back on, `COOKIE_SECURE=true`, and the security headers reviewed in the internal Caddyfile (or Traefik middlewares).
 - [ ] Dokploy panel hardening: 2FA confirmed, Dokploy updated, and consider restricting `dokploy.usereflow.app` (Cloudflare Access or an IP allow-list), keeping in mind that GitHub Actions must still reach its API.
 

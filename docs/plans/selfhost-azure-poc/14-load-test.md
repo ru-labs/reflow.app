@@ -1,6 +1,6 @@
 # Phase 14 — Load test: 10 / 100 / 1000 concurrent users
 
-Outcome: measured response times for a realistic reflow workflow at three load
+Outcome (runs against the **test** environment from phase 13a, never prod): measured response times for a realistic reflow workflow at three load
 levels, server resource usage during each, and one comparison report. The
 answer to "can this VM (B2ls v2) carry 1000 concurrent users?" comes with evidence.
 
