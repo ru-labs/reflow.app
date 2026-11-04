@@ -16,7 +16,7 @@ Read the build numbers from the session log (phases 09 and 12), then pick:
 - **B: build in GitHub Actions, the VM only pulls.** CI builds `ghcr.io/ru-labs/reflow-web` and `reflow-api` (tags `<sha7>` and a moving `:poc`). The compose switches `build:` → `image: …:poc` with `pull_policy: always`. This saves VM CPU credits during deploys, deploys exactly the tested commit, and makes rollback one click with no rebuild (re-point `:poc` at an older sha). The self-hosted web image holds no secrets (phase 12 removed `VITE_SUPABASE_*`), so the packages can be public and the VM needs no registry login.
 - Not recommended: leaving Dokploy's push-to-deploy as the only path. Untested commits go live.
 
-- [ ] **[you]** Decision recorded in the session log: ___
+- [x] **[you]** Decision recorded in the session log: **A** (build on the VM).
 
 ## Credentials [you]
 
