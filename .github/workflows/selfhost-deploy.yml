@@ -50,6 +50,10 @@ jobs:
             server/package-lock.json
 
       - name: App tests and lint
+        env:
+          # unit tests import the default (Supabase) backend, which throws without these; no request is made
+          VITE_SUPABASE_URL: http://localhost
+          VITE_SUPABASE_ANON_KEY: test
         run: |
           npm ci
           npm run test
