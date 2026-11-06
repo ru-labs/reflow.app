@@ -11,21 +11,20 @@ explanations, no surrounding prose — just the block.
 
 ```
 Frontend:   Vite + React 19 + TypeScript (SPA)
-Backend:    none (Supabase direct — Postgres + Auth + Realtime, no custom server)
-Database:   PostgreSQL (hosted via Supabase)
-Cloud:      Vercel (DEV/QUALITY/PROD projects) + Supabase
-DevOps:     GitHub Actions -> Octopus Deploy -> Vercel
+Backend:    Node 24 + Fastify 5 (server/), bcrypt auth, SSE realtime via LISTEN/NOTIFY
+Database:   PostgreSQL 17 (Docker volume on the VM)
+Cloud:      Azure VM, Dokploy, Traefik + Caddy
+DevOps:     GitHub Actions -> Dokploy API -> health gate
 Local run:  Node v24.18.0, npm 11.16.0, git 2.48.1
-Other:      framer-motion (animation), oxlint (lint), vitest (tests), Vercel CLI 58.9.0
+Other:      framer-motion (animation), oxlint (lint), vitest (tests)
 ```
 
 Values come from this repo's own config, not memorized — regenerate them each
 call instead of assuming they're static:
 
 - **Frontend / Other deps**: `package.json` (`dependencies`/`devDependencies`).
-- **Backend / Database**: root `CLAUDE.md` stack section + `src/lib/supabase.ts`.
-- **Cloud / DevOps**: `.github/workflows/*.yml` (env vars referencing Vercel/Octopus)
-  and the `devops-workflow` skill.
+- **Backend / Database**: root `CLAUDE.md` stack section + `server/package.json`.
+- **Cloud / DevOps**: `.github/workflows/*.yml` and `deploy/selfhost/`.
 - **Local run**: actual installed versions on this machine — run `node --version`,
   `npm --version`, `git --version` (and any other CLI referenced by the workflow,
   e.g. `vercel --version`) rather than guessing.

@@ -2,7 +2,7 @@
 
 The history screen itself, how it's reached, and a browser check.
 Colours, type, lowercase copy, icons and motion follow `PRODUCT.md` /
-`branding.md` (binding). Use the `impeccable` skill for the visual pass.
+`branding.md` (binding).
 
 ## Deliverables
 

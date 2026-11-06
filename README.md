@@ -2,7 +2,7 @@
 
 A personal task-triage app: Vite + React + TypeScript on the frontend, talking directly to a hosted Supabase project (Postgres + Auth) with no custom backend.
 
-Branching model is `feature/* → dev → main`, promoted to DEV/QUALITY/PROD by Octopus Deploy — see the `devops-workflow` Claude Code skill (`.claude/skills/devops-workflow/SKILL.md`) for the full flow rather than re-deriving it here.
+Deployment is self-hosted (Dokploy on an Azure VM) — see [deploy/selfhost/README.md](deploy/selfhost/README.md).
 
 ## Overview
 
@@ -90,5 +90,4 @@ Then open the printed "Network" URL (e.g. `http://192.168.1.23:5173`) on another
 ## Notes
 
 - No Docker, backend server, or local database is required — Supabase is a hosted service reached over HTTPS.
-- `.claude/settings.local.json` references an optional "Impeccable" design-critique Claude Code skill. It's not required to run or develop the app; the hook safely no-ops if the skill isn't installed locally.
 - For how the app is actually built — data model, module map, the optimistic-mutation pattern, realtime sync, ranking/compare-duel mechanic — see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

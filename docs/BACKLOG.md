@@ -18,9 +18,6 @@ and remove it from this list — don't track it in both places.
       Surfaces as an opaque HTTP 400 on insert. Apply it via the SQL Editor.
 - [ ] RLS / security audit across all Supabase tables — deliberately deferred, wanted before
       real users or payments.
-- [ ] Octopus → Pushcut deploy notification links to Octopus's generic Tasks page, which has
-      nothing actionable on it; it should land somewhere the next stage can be triggered from.
-      Three ranked fix options are in `docs/plans/devops-setup/archive/04-octopus-setup.md`.
 
 ## Verification / spot-checks (likely already fine, unconfirmed)
 

@@ -53,8 +53,8 @@ as any other edit.
 
 ## Non-goals
 
-- Does not touch `PRODUCT.md` (schema-managed by the `impeccable` skill) or `branding.md`
-  (binding brand reference) — both explicitly out of this skill's write surface.
+- Does not touch `PRODUCT.md` or `branding.md` (binding brand references) — both
+  explicitly out of this skill's write surface.
 - Does not create new `docs/plans/` phase files — that's a planning decision, not a
   maintenance one.
 - Does not run on every keystroke or every save — only at natural task-completion boundaries.

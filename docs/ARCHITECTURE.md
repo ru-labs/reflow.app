@@ -38,7 +38,7 @@ same RLS-per-user pattern. Backs `useTheme`/`src/lib/theme.ts`.
 
 **Preprod schema note:** the `reflow dev` Supabase project also holds a `preprod.tasks` and
 `preprod.profiles` (same shape as `public.*`, same constraints, verified live), used by the
-QUALITY environment per the `devops-workflow` skill. `preprod.tasks`'s base shape is captured in
+QUALITY environment. `preprod.tasks`'s base shape is captured in
 `supabase/migrations/preprod_schema_init.sql`/`preprod_schema_grants.sql`, but `preprod.profiles`
 and preprod's `0005`-equivalent input-limit constraints were applied by hand with no corresponding
 file in this repo — confirmed live via direct schema inspection, not documented anywhere in
