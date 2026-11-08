@@ -45,3 +45,7 @@ move forward, so a revert that needs an older schema needs a hand-written down m
 
 - From the VM: `docker exec $(docker ps -qf label=com.docker.compose.service=db) psql -U reflow -d reflow`
 - From the laptop: `ssh -N -L 15432:localhost:5432 reflow-vm`, then connect to `localhost:15432` (prod: `-L 15433:localhost:5433`).
+
+## Backups
+
+`backup.sh` dumps each environment's `db` into `/opt/reflow/backups/<env>/` (7 days kept) and exits non-zero if any dump fails. The project names are in the script's `ENVS` default; override with the `ENVS` env var. Nightly via the VM's crontab (03:00). Copying dumps off the VM and a tested restore are prerequisites of phase 15.
