@@ -23,9 +23,9 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
   - the host DB port `127.0.0.1:5432:5432` → `127.0.0.1:${DB_HOST_PORT:-5432}:5432` (test 5432, prod 5433; localhost only, so the tunnel still works)
   - the Postgres tuning flags (`shared_buffers` etc.) → env vars with the current values as defaults, so test can run smaller than prod
 - [x] **[agent]** Add `mem_limit` per service (env-overridable defaults, e.g. db 512m, api 384m, web 64m) so one environment can't starve the other or Dokploy. Verify the values against the measured RAM in the session log before choosing.
-- [ ] **[agent]** `deploy/selfhost/.env.example`: add `PGDATA_VOLUME`, `DB_HOST_PORT`, the tuning vars, and a table in `deploy/selfhost/README.md` (create it if phase 13 hasn't) of the env values for **test** and **prod**.
-- [ ] **[agent]** Make `APP_VERSION` / `VITE_APP_VERSION` carry the environment (e.g. `test-…` / `prod-…`) so `/api/health` and the version badge say which one you're looking at.
-- [ ] **[agent]** Phase 13's workflows (`selfhost-deploy.yml`, rollback): add an input `environment: test|prod` choosing the Dokploy compose ID (`SELFHOST_COMPOSE_ID_TEST` / `_PROD`) and health-check URL. The `prod` job uses a GitHub *environment* with required reviewers.
+- [x] **[agent]** `deploy/selfhost/.env.example`: add `PGDATA_VOLUME`, `DB_HOST_PORT`, the tuning vars, and a table in `deploy/selfhost/README.md` (create it if phase 13 hasn't) of the env values for **test** and **prod**.
+- [x] **[agent]** Make `APP_VERSION` / `VITE_APP_VERSION` carry the environment (e.g. `test-…` / `prod-…`) so `/api/health` and the version badge say which one you're looking at.
+- [x] **[agent]** Phase 13's workflows (`selfhost-deploy.yml`, rollback): add an input `environment: test|prod` choosing the Dokploy compose ID (deviation: test keeps the existing `SELFHOST_COMPOSE_ID`, prod adds `SELFHOST_COMPOSE_ID_PROD`) and health-check URL. The `prod` job uses a GitHub *environment* with required reviewers.
 - [ ] **[agent]** Commit, don't push yet (the compose changes must not redeploy test before its env vars exist).
 
 ## Rename self → test [you]
