@@ -98,7 +98,7 @@ no CORS and auth can use an httpOnly session cookie.
 | `10-backend-api.md` | `server/`: Fastify API, schema, auth, SSE, tests | agent | ☑ |
 | `11-frontend-data-layer.md` | Build-time switch `VITE_BACKEND`, self-hosted adapter | agent | ☑ |
 | `12-first-selfhosted-deploy.md` | Add `api` to the compose, switch env → **🎯 working self-hosted demo** | you + agent | ☑ |
-| `13-deploy-pipeline.md` | GitHub Actions (tests) → Dokploy API deploy, health gate, rollback | agent + you | ☐ |
+| `13-deploy-pipeline.md` | GitHub Actions (tests) → Dokploy API deploy, health gate, rollback | agent + you | ☑ |
 | `13a-multi-environment.md` | `test` (renamed from self) + empty `prod` stack on the same VM, own DBs, backups | agent + you | ☐ |
 | `14-load-test.md` | k6: 10 / 100 / 1000 users, monitoring, report | agent + you | ☐ |
 | `15-prod-cutover-outline.md` | Go/no-go criteria + cutover runbook (outline) | later | ☐ |
@@ -139,3 +139,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-11-04 | 13a, 13 | Added `13a-multi-environment.md` (test + prod on one VM, one Postgres container per environment, prod deploys from `main` with manual approval, `prod.usereflow.app` until cutover). Phase 13 decision: **option A**, build on the VM (deploys took 29 s and 42 s, no memory trouble); revisit B only if builds become a problem. |
 | 2026-11-04 | 13 | Pipeline works: `.github/workflows/selfhost-deploy.yml` (tests → Dokploy `compose.deploy` → poll `deployment.allByCompose` → health gate), secrets `SELFHOST_DOKPLOY_URL/TOKEN/COMPOSE_ID`, Auto Deploy off in Dokploy, `deploy/selfhost/README.md`. Deviations: also triggers on push to `feature/selfhost-poc` (no "Run workflow" button until the file is on `main`); CI sets dummy `VITE_SUPABASE_*` for unit tests. First run green. **Resume:** phase 13 verify items left (failing-test blocks deploy, visible change + rollback by revert, then archive). Then 13a (test/prod environments, approved), 14 load test, 15 cutover outline. Phase 11 still open only for the `VITE_DEV_MODE` mock-task check. |
 | 2026-11-08 | 11 | DEV_MODE mock-task check passed (user, PowerShell: set `$env:VITE_DEV_MODE`, the bash-style prefix does not work). Archived. |
+| 2026-11-08 | 13 | Verified: failing test stops at `test` with nothing deployed; visible copy change deployed and a revert rolled it back; data survived. Archived. Next: 13a. |
