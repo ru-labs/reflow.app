@@ -3,7 +3,7 @@ import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH, TITLE_MAX_LENGTH, validateEmail,
 
 describe('validateTitle', () => {
   it('accepts a normal title', () => {
-    expect(validateTitle('call the plumber')).toEqual({ ok: true, value: 'call the plumber' });
+    expect(validateTitle('call the plumber')).toEqual({ ok: true, value: 'BROKEN' });
   });
 
   it('trims surrounding whitespace', () => {
