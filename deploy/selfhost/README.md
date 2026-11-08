@@ -22,7 +22,14 @@ GitHub → *Actions* → **Selfhost deploy** → *Run workflow*, pick `test` (fr
 It runs the app and server tests, calls Dokploy's `compose.deploy`, waits for the
 deployment to finish, then checks `/api/health`. If tests fail, nothing is deployed.
 
-Secrets: `SELFHOST_DOKPLOY_URL`, `SELFHOST_DOKPLOY_TOKEN`, `SELFHOST_COMPOSE_ID` (test), `SELFHOST_COMPOSE_ID_PROD`. GitHub environments: `selfhost-poc` (test), `selfhost-prod` (required reviewers).
+Secrets are **environment secrets**, not repo-level, so test runs can't read prod's:
+
+| GitHub environment | Secrets | Rules |
+|---|---|---|
+| `selfhost-poc` (test) | `SELFHOST_DOKPLOY_URL`, `SELFHOST_DOKPLOY_TOKEN` (limited to the test project), `SELFHOST_COMPOSE_ID` | none |
+| `selfhost-prod` | `SELFHOST_DOKPLOY_URL`, `SELFHOST_DOKPLOY_TOKEN` (a separate prod token), `SELFHOST_COMPOSE_ID_PROD` | required reviewers (no self-review), deployment branches: `main` only |
+
+Each Dokploy compose has *Isolated Deployment* on, so a stack's `api` and `db` names resolve only inside it.
 
 ## Roll back
 

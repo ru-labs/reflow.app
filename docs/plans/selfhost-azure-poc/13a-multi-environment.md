@@ -26,7 +26,7 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 - [x] **[agent]** `deploy/selfhost/.env.example`: add `PGDATA_VOLUME`, `DB_HOST_PORT`, the tuning vars, and a table in `deploy/selfhost/README.md` (create it if phase 13 hasn't) of the env values for **test** and **prod**.
 - [x] **[agent]** Make `APP_VERSION` / `VITE_APP_VERSION` carry the environment (e.g. `test-…` / `prod-…`) so `/api/health` and the version badge say which one you're looking at.
 - [x] **[agent]** Phase 13's workflows (`selfhost-deploy.yml`, rollback): add an input `environment: test|prod` choosing the Dokploy compose ID (deviation: test keeps the existing `SELFHOST_COMPOSE_ID`, prod adds `SELFHOST_COMPOSE_ID_PROD`) and health-check URL. The `prod` job uses a GitHub *environment* with required reviewers.
-- [ ] **[agent]** Commit, don't push yet (the compose changes must not redeploy test before its env vars exist).
+- [x] **[agent]** Commit, don't push yet (the compose changes must not redeploy test before its env vars exist).
 
 ## Rename self → test [you]
 
@@ -41,12 +41,15 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 - [ ] **[you]** VM: `docker volume create reflow_prod_pgdata`. A new volume means a new empty database. Test's data is not copied.
 - [ ] **[you]** Cloudflare DNS: A record `prod` → `98.71.18.196` (DNS only).
 - [ ] **[you]** Dokploy: new Compose service `reflow-prod`, same repo, branch `main` (or as decided above), compose path `deploy/selfhost/compose.yaml`. Environment: `BUILD_MODE=selfhosted`, **a different** `POSTGRES_PASSWORD` (save it in `/opt/reflow/.env.prod`, chmod 600), `PGDATA_VOLUME=reflow_prod_pgdata`, `DB_HOST_PORT=5433`, `APP_VERSION`/`VITE_APP_VERSION=prod-1`, `SESSION_TTL_DAYS=30`, `AUTH_RATE_LIMIT_PER_MIN=10`. **Auto Deploy off.**
+- [ ] **[you]** Dokploy → `reflow-prod` → Advanced: turn **Isolated Deployment** on (as test has), so prod's `api`/`db` names can't resolve to test's containers.
+- [ ] **[you]** GitHub: move the Dokploy secrets into environment secrets as in `deploy/selfhost/README.md`: a test-only Dokploy token on `selfhost-poc`, a separate prod token + `SELFHOST_COMPOSE_ID_PROD` on `selfhost-prod`, remove the repo-level ones; `selfhost-prod`: required reviewers (no self-review), deployment branches `main` only.
 - [ ] **[you]** Domain `prod.usereflow.app` → service `web`, port 80, HTTPS on.
 - [ ] **[you]** Deploy. `curl.exe -s https://prod.usereflow.app/api/health` returns `{"ok":true,"version":"prod-1"}`.
 - [ ] **[you]** Note both stacks' RAM from `docker stats --no-stream` and `free -m` in the session log (this is the real number for the idle question below).
 
 ## Isolation checks [you]
 
+- [ ] **[you]** `docker exec <prod web container> getent hosts api` returns only prod's api container IP.
 - [ ] **[you]** Sign up on `prod.usereflow.app` with a new email, add a task. Sign in to `test.usereflow.app` with the same email: it must **not** exist there, and test's tasks must not appear on prod.
 - [ ] **[you]** `docker exec` into each `db` container: `select email from users;` shows only that environment's users.
 - [ ] **[you]** Reboot the VM once with both stacks up. Both come back without help, and `free -m` shows no sustained swap use.
