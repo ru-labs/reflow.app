@@ -44,7 +44,7 @@ Read the build numbers from the session log (phases 09 and 12), then pick:
 
 - [x] **[you]** (ran via the push trigger, see deviation below) GitHub → *Actions* → *selfhost-deploy* → *Run workflow*. All jobs are green, and Dokploy shows a new deployment started by the API.
 - [x] **[you]** `/api/health` shows the expected version, and so does the version badge (B: `selfhost.<run>`; A: whatever `APP_VERSION`/`VITE_APP_VERSION` is set to in Dokploy).
-- [ ] **[you]** Make a deliberately failing test on a throwaway commit → the workflow stops at `test` and **nothing is deployed**. Revert it.
+- [x] **[you]** Make a deliberately failing test on a throwaway commit → the workflow stops at `test` and **nothing is deployed**. Revert it.
 - [ ] **[you]** Change something visible (e.g. a copy tweak), deploy, and see it live. Then roll back (A: revert + deploy; B: the rollback workflow with the previous sha) and see it revert.
 - [ ] **[you]** Existing data survived both deploys (the tasks from phase 12 are still there).
 - [ ] **[you]** Session log line, then move this file to `archive/`.
