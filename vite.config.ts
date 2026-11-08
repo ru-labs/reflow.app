@@ -41,6 +41,8 @@ export default defineConfig(({ mode }) => {
           // so task data is deliberately NOT cached for offline use. Opening the app
           // offline shows the shell; data operations still require a connection.
           globPatterns: ['**/*.{js,css,html,svg}'],
+          // keep /api/* (e.g. opening /api/health in the browser) out of the SPA fallback
+          navigateFallbackDenylist: [/^\/api\//],
         },
       }),
     ],

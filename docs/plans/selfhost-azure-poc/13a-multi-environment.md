@@ -49,11 +49,11 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 
 ## Isolation checks [you]
 
-- [ ] **[you]** `docker exec <prod web container> getent hosts api` returns only prod's api container IP.
-- [ ] **[you]** Sign up on `prod.usereflow.app` with a new email, add a task. Sign in to `test.usereflow.app` with the same email: it must **not** exist there, and test's tasks must not appear on prod.
-- [ ] **[you]** `docker exec` into each `db` container: `select email from users;` shows only that environment's users.
-- [ ] **[you]** Reboot the VM once with both stacks up. Both come back without help, and `free -m` shows no sustained swap use.
-- [ ] **[you]** Dokploy → both stacks → *Environment* are separate; the test stack's `POSTGRES_PASSWORD` can't open the prod DB (`psql` with the wrong password fails).
+- [x] **[you]** `docker exec <prod web container> getent hosts api` returns only prod's api container IP.
+- [x] **[you]** Sign up on `prod.usereflow.app` with a new email, add a task. Sign in to `test.usereflow.app` with the same email: it must **not** exist there, and test's tasks must not appear on prod.
+- [x] **[you]** `docker exec` into each `db` container: `select email from users;` shows only that environment's users.
+- [x] **[you]** Reboot the VM once with both stacks up. Both come back without help, and `free -m` shows no sustained swap use.
+- [x] **[you]** Dokploy → both stacks → *Environment* are separate; the test stack's `POSTGRES_PASSWORD` can't open the prod DB (`psql` with the wrong password fails).
 
 ## Backups per environment [agent + you]
 
