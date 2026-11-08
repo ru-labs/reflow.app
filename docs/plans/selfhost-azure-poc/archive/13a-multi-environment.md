@@ -52,7 +52,7 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 - [x] **[you]** `docker exec <prod web container> getent hosts api` returns only prod's api container IP.
 - [x] **[you]** Sign up on `prod.usereflow.app` with a new email, add a task. Sign in to `test.usereflow.app` with the same email: it must **not** exist there, and test's tasks must not appear on prod.
 - [x] **[you]** `docker exec` into each `db` container: `select email from users;` shows only that environment's users.
-- [ ] **[you]** Reboot the VM once with both stacks up. Both come back without help, and `free -m` shows no sustained swap use. **Note 2026-11-08: first reboot left `dokploy-traefik` Exited (128) and it needed a manual `docker start`. Find out why before ticking.**
+- [x] **[you]** Reboot the VM once with both stacks up. Both come back without help, and `free -m` shows no sustained swap use. Fixed with `deploy/selfhost/start-traefik.sh` (@reboot cron): Traefik started before Swarm created `dokploy-network`. Second reboot passed.
 - [x] **[you]** Dokploy → both stacks → *Environment* are separate; the test stack's `POSTGRES_PASSWORD` can't open the prod DB (`psql` with the wrong password fails).
 
 ## Backups per environment [agent + you]
@@ -66,13 +66,13 @@ Only worth doing if it frees meaningful memory. Decide from the RAM numbers
 noted above: if the idle test stack uses < ~300 MB, skip this and keep it
 always on.
 
-- [ ] **[you]** Decision recorded in the session log: *always on / stop when idle*.
+- [x] **[you]** Decision recorded in the session log: *always on / stop when idle*.
 - [-] **[agent]** (skipped: always on) Two small `workflow_dispatch` workflows, `test-sleep` and `test-wake`, calling Dokploy's compose stop / start API for the test compose, using the same token and the health gate from phase 13. Confirm the exact endpoints in `https://docs.dokploy.com/openapi.json`.
-- [ ] **[you]** Wake it by running `test-wake` before testing (about 15–30 s to healthy). A request to a stopped stack makes Traefik return 404/502 until then.
-- [ ] Not planned: automatic wake-on-first-request. It needs an extra always-on component that starts the stack on a request (e.g. a Traefik plugin such as Sablier). It's unverified with Dokploy compose mode, so treat it as a separate experiment.
+- [-] **[you]** Wake it by running `test-wake` before testing (about 15–30 s to healthy). A request to a stopped stack makes Traefik return 404/502 until then.
+- [-] Not planned: automatic wake-on-first-request. It needs an extra always-on component that starts the stack on a request (e.g. a Traefik plugin such as Sablier). It's unverified with Dokploy compose mode, so treat it as a separate experiment.
 
 ## Verify the whole phase [you]
 
-- [ ] **[you]** The pipeline from phase 13 deploys to `test` by default and to `prod` only after the approval click. **Prod half can only be tested after the PoC is merged to main (workflow guard); until then prod is deployed from Dokploy's Deploy button.**
+- [x] **[you]** The pipeline from phase 13 deploys to `test` by default and to `prod` only after the approval click. **Prod half can only be tested after the PoC is merged to main (workflow guard); until then prod is deployed from Dokploy's Deploy button.** (prod half moved to phase 15 verification)
 - [x] **[you]** Phase 12's smoke list passes on `test.usereflow.app` (auth, duel, reorder, history, theme, SSE, isolation).
-- [ ] **[you]** Session log line, update the Environment facts table and the architecture diagram's domains in `00-overview.md`, then move this file to `archive/`.
+- [x] **[you]** Session log line, update the Environment facts table and the architecture diagram's domains in `00-overview.md`, then move this file to `archive/`.

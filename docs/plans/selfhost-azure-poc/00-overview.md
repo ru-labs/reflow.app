@@ -22,10 +22,11 @@ by a coding agent in this repo. Every checkbox is one action.
 ```
 browser ──HTTPS──► Traefik (Dokploy, :80/:443, auto Let's Encrypt)
                      ├── dokploy.usereflow.app → Dokploy panel (2FA)
-                     └── self.usereflow.app    → web (Caddy, :80, internal)
+                     ├── test.usereflow.app    → web (Caddy, :80, internal)
                                                    ├── /       → static SPA (built with VITE_BACKEND=selfhosted)
                                                    └── /api/*  → api (Node + Fastify, :3000)
                                                                   └── db (postgres:17, 127.0.0.1:5432 only)
+                     └── prod.usereflow.app    → same stack shape, own db (127.0.0.1:5433), until the cutover
 ```
 
 `web`, `api` and `db` are one Dokploy **Compose** service built from
@@ -99,7 +100,7 @@ no CORS and auth can use an httpOnly session cookie.
 | `11-frontend-data-layer.md` | Build-time switch `VITE_BACKEND`, self-hosted adapter | agent | ☑ |
 | `12-first-selfhosted-deploy.md` | Add `api` to the compose, switch env → **🎯 working self-hosted demo** | you + agent | ☑ |
 | `13-deploy-pipeline.md` | GitHub Actions (tests) → Dokploy API deploy, health gate, rollback | agent + you | ☑ |
-| `13a-multi-environment.md` | `test` (renamed from self) + empty `prod` stack on the same VM, own DBs, backups | agent + you | ☐ |
+| `13a-multi-environment.md` | `test` (renamed from self) + empty `prod` stack on the same VM, own DBs, backups | agent + you | ☑ |
 | `14-load-test.md` | k6: 10 / 100 / 1000 users, monitoring, report | agent + you | ☐ |
 | `15-prod-cutover-outline.md` | Go/no-go criteria + cutover runbook (outline) | later | ☐ |
 
@@ -143,3 +144,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-11-08 | 13a | Decisions: prod domain `prod.usereflow.app`; test deploys from `feature/selfhost-poc` (temporary, `dev` after the PoC merge), prod from `main` with approval; one Postgres container per environment. |
 | 2026-11-08 | 13a | Test renamed: `https://test.usereflow.app` works (DNS, Dokploy env/domain, pipeline deploy green). Compose parametrized, workflow has test/prod input. Security review: secrets must be environment-scoped with separate prod token (in prod steps). Open: delete `self` DNS record, then create prod. |
 | 2026-11-08 | 13a | Prod live: `https://prod.usereflow.app/api/health` returns prod-1 (builds from `feature/selfhost-poc` until the PoC merges to main). RAM, both stacks up: test api/db/web 25/38/19 MiB, prod 27/63/14 MiB, Dokploy ~1.1 GiB; used 2039 of 3855 MB, available 1815, swap 7 MB. Decision: test stays always on. Open: environment-scoped GitHub secrets, isolation checks, reboot, backups. |
+| 2026-11-08 | 13a | Done. Test and prod stacks live with own DBs, isolation verified (network, users, passwords), RAM fine, per-env backups + cron, prod GitHub environment (reviewers, main-only). Reboot bug: Traefik exited 128 (started before Swarm `dokploy-network`), fixed by `start-traefik.sh` @reboot cron, second reboot passed. Prod deploy via workflow (needs main) to be verified in phase 15. Archived. Next: 14 load test. |
