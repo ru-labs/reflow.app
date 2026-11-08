@@ -58,7 +58,7 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 ## Backups per environment [agent + you]
 
 - [x] **[agent]** Extend the phase-09 nightly `pg_dump` cron so it dumps **both** `db` containers into `/opt/reflow/backups/<env>/` with the same retention. Write the script into `deploy/selfhost/` so it's in git.
-- [ ] **[you]** Run it once by hand and check that both folders contain non-empty `.dump` files. The off-VM copy and a **tested restore** stay prerequisites of phase 15.
+- [x] **[you]** Run it once by hand and check that both folders contain non-empty `.dump` files. The off-VM copy and a **tested restore** stay prerequisites of phase 15.
 
 ## Optional: let test sleep [you, decide after measuring]
 
