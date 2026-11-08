@@ -49,3 +49,7 @@ move forward, so a revert that needs an older schema needs a hand-written down m
 ## Backups
 
 `backup.sh` dumps each environment's `db` into `/opt/reflow/backups/<env>/` (7 days kept) and exits non-zero if any dump fails. The project names are in the script's `ENVS` default; override with the `ENVS` env var. Nightly via the VM's crontab (03:00). Copying dumps off the VM and a tested restore are prerequisites of phase 15.
+
+## After a reboot
+
+Docker starts `dokploy-traefik` before Swarm has created `dokploy-network`, so it exits (128) and stays down (both stacks then look dead from outside). `start-traefik.sh` retries until it runs; it is started by an `@reboot` crontab line (see the script header).
