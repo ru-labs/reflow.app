@@ -74,5 +74,5 @@ always on.
 ## Verify the whole phase [you]
 
 - [ ] **[you]** The pipeline from phase 13 deploys to `test` by default and to `prod` only after the approval click. **Prod half can only be tested after the PoC is merged to main (workflow guard); until then prod is deployed from Dokploy's Deploy button.**
-- [ ] **[you]** Phase 12's smoke list passes on `test.usereflow.app` (auth, duel, reorder, history, theme, SSE, isolation).
+- [x] **[you]** Phase 12's smoke list passes on `test.usereflow.app` (auth, duel, reorder, history, theme, SSE, isolation).
 - [ ] **[you]** Session log line, update the Environment facts table and the architecture diagram's domains in `00-overview.md`, then move this file to `archive/`.
