@@ -34,18 +34,18 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 - [x] **[you]** Dokploy → `reflow` compose → *Environment*: add `PGDATA_VOLUME=reflow_pgdata`, `DB_HOST_PORT=5432`, and rename the compose service to `reflow-test` (display name only; the project name used by `docker exec` stays unless noted below).
 - [x] **[you]** Dokploy → Domains: change `self.usereflow.app` → `test.usereflow.app` (Let's Encrypt issues the cert on the first request).
 - [x] **[agent]** Push. **[you]** Deploy, then check `https://test.usereflow.app/api/health` and sign in with a phase-12 account. The data is still there because the volume is the same. (Cookies are per host, so you sign in once again.)
-- [ ] **[you]** Cloudflare: delete the `self` A record. Update the Environment facts table in `00-overview.md` (Self-hosted URL, compose project names).
+- [x] **[you]** Cloudflare: delete the `self` A record. Update the Environment facts table in `00-overview.md` (Self-hosted URL, compose project names).
 
 ## Create prod [you]
 
-- [ ] **[you]** VM: `docker volume create reflow_prod_pgdata`. A new volume means a new empty database. Test's data is not copied.
-- [ ] **[you]** Cloudflare DNS: A record `prod` → `98.71.18.196` (DNS only).
-- [ ] **[you]** Dokploy: new Compose service `reflow-prod`, same repo, branch `main` (or as decided above), compose path `deploy/selfhost/compose.yaml`. Environment: `BUILD_MODE=selfhosted`, **a different** `POSTGRES_PASSWORD` (save it in `/opt/reflow/.env.prod`, chmod 600), `PGDATA_VOLUME=reflow_prod_pgdata`, `DB_HOST_PORT=5433`, `APP_VERSION`/`VITE_APP_VERSION=prod-1`, `SESSION_TTL_DAYS=30`, `AUTH_RATE_LIMIT_PER_MIN=10`. **Auto Deploy off.**
-- [ ] **[you]** Dokploy → `reflow-prod` → Advanced: turn **Isolated Deployment** on (as test has), so prod's `api`/`db` names can't resolve to test's containers.
+- [x] **[you]** VM: `docker volume create reflow_prod_pgdata`. A new volume means a new empty database. Test's data is not copied.
+- [x] **[you]** Cloudflare DNS: A record `prod` → `98.71.18.196` (DNS only).
+- [x] **[you]** Dokploy: new Compose service `reflow-prod`, same repo, branch `main` (or as decided above), compose path `deploy/selfhost/compose.yaml`. Environment: `BUILD_MODE=selfhosted`, **a different** `POSTGRES_PASSWORD` (save it in `/opt/reflow/.env.prod`, chmod 600), `PGDATA_VOLUME=reflow_prod_pgdata`, `DB_HOST_PORT=5433`, `APP_VERSION`/`VITE_APP_VERSION=prod-1`, `SESSION_TTL_DAYS=30`, `AUTH_RATE_LIMIT_PER_MIN=10`. **Auto Deploy off.**
+- [x] **[you]** Dokploy → `reflow-prod` → Advanced: turn **Isolated Deployment** on (as test has), so prod's `api`/`db` names can't resolve to test's containers.
 - [ ] **[you]** GitHub: move the Dokploy secrets into environment secrets as in `deploy/selfhost/README.md`: a test-only Dokploy token on `selfhost-poc`, a separate prod token + `SELFHOST_COMPOSE_ID_PROD` on `selfhost-prod`, remove the repo-level ones; `selfhost-prod`: required reviewers (no self-review), deployment branches `main` only.
-- [ ] **[you]** Domain `prod.usereflow.app` → service `web`, port 80, HTTPS on.
-- [ ] **[you]** Deploy. `curl.exe -s https://prod.usereflow.app/api/health` returns `{"ok":true,"version":"prod-1"}`.
-- [ ] **[you]** Note both stacks' RAM from `docker stats --no-stream` and `free -m` in the session log (this is the real number for the idle question below).
+- [x] **[you]** Domain `prod.usereflow.app` → service `web`, port 80, HTTPS on.
+- [x] **[you]** Deploy. `curl.exe -s https://prod.usereflow.app/api/health` returns `{"ok":true,"version":"prod-1"}`.
+- [x] **[you]** Note both stacks' RAM from `docker stats --no-stream` and `free -m` in the session log (this is the real number for the idle question below).
 
 ## Isolation checks [you]
 
@@ -67,7 +67,7 @@ noted above: if the idle test stack uses < ~300 MB, skip this and keep it
 always on.
 
 - [ ] **[you]** Decision recorded in the session log: *always on / stop when idle*.
-- [ ] **[agent]** (If stopping) Two small `workflow_dispatch` workflows, `test-sleep` and `test-wake`, calling Dokploy's compose stop / start API for the test compose, using the same token and the health gate from phase 13. Confirm the exact endpoints in `https://docs.dokploy.com/openapi.json`.
+- [-] **[agent]** (skipped: always on) Two small `workflow_dispatch` workflows, `test-sleep` and `test-wake`, calling Dokploy's compose stop / start API for the test compose, using the same token and the health gate from phase 13. Confirm the exact endpoints in `https://docs.dokploy.com/openapi.json`.
 - [ ] **[you]** Wake it by running `test-wake` before testing (about 15–30 s to healthy). A request to a stopped stack makes Traefik return 404/502 until then.
 - [ ] Not planned: automatic wake-on-first-request. It needs an extra always-on component that starts the stack on a request (e.g. a Traefik plugin such as Sablier). It's unverified with Dokploy compose mode, so treat it as a separate experiment.
 

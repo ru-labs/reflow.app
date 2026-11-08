@@ -78,7 +78,7 @@ no CORS and auth can use an httpOnly session cookie.
 | VM private IP | `172.16.0.4` (`eth0`, `172.16.0.0/24`). Swarm advertise address |
 | Docker overlay subnets | `ingress` `10.0.0.0/24`, `dokploy-network` `10.0.1.0/24`. No overlap with the VM subnet |
 | Dokploy panel | `https://dokploy.usereflow.app` (phase 08), version: `v0.30.8` |
-| Dokploy compose project | `reflowpoc-reflow-edbr4g` (used in `docker exec` commands as `<project>`) |
+| Dokploy compose projects | test `reflowpoc-reflow-edbr4g`, prod `reflowpoc-reflowprod-o8by2i` (used in `docker exec` commands as `<project>`) |
 | Repo (for Dokploy GitHub App) | `ru-labs/reflow.app` (public) |
 | Where secrets live | Dokploy → `reflow` compose → *Environment* (app env). VM: `/opt/reflow/.env` (chmod 600) as the offline record of `POSTGRES_PASSWORD`. CI: GitHub Actions secrets `SELFHOST_*` |
 
@@ -142,3 +142,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-11-08 | 13 | Verified: failing test stops at `test` with nothing deployed; visible copy change deployed and a revert rolled it back; data survived. Archived. Next: 13a. |
 | 2026-11-08 | 13a | Decisions: prod domain `prod.usereflow.app`; test deploys from `feature/selfhost-poc` (temporary, `dev` after the PoC merge), prod from `main` with approval; one Postgres container per environment. |
 | 2026-11-08 | 13a | Test renamed: `https://test.usereflow.app` works (DNS, Dokploy env/domain, pipeline deploy green). Compose parametrized, workflow has test/prod input. Security review: secrets must be environment-scoped with separate prod token (in prod steps). Open: delete `self` DNS record, then create prod. |
+| 2026-11-08 | 13a | Prod live: `https://prod.usereflow.app/api/health` returns prod-1 (builds from `feature/selfhost-poc` until the PoC merges to main). RAM, both stacks up: test api/db/web 25/38/19 MiB, prod 27/63/14 MiB, Dokploy ~1.1 GiB; used 2039 of 3855 MB, available 1815, swap 7 MB. Decision: test stays always on. Open: environment-scoped GitHub secrets, isolation checks, reboot, backups. |
