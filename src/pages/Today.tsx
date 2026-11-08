@@ -227,7 +227,7 @@ export function Today({ session, isDark, toggleTheme }: { session: AppSession; i
             <h1 className="list-heading">today</h1>
             {!loading && (
               <p className="list-sub">
-                {allClear ? "today's settled." : `${tasks.length} thing${tasks.length === 1 ? '' : 's'}, in order (deploy test).`}
+                {allClear ? "today's settled." : `${tasks.length} thing${tasks.length === 1 ? '' : 's'}, in order.`}
               </p>
             )}
           </div>
