@@ -72,8 +72,8 @@ no CORS and auth can use an httpOnly session cookie.
 | VM public IP (static) | `98.71.18.196` |
 | Azure DNS label | `reflow-poc.<region>.cloudapp.azure.com` |
 | SSH key (laptop) | `~/.ssh/reflow_poc` |
-| DNS provider for usereflow.app | Cloudflare (NS: `iris`/`lennox.ns.cloudflare.com`), `self` and `dokploy` A records DNS-only |
-| Self-hosted URL | `https://self.usereflow.app` |
+| DNS provider for usereflow.app | Cloudflare (NS: `iris`/`lennox.ns.cloudflare.com`), `test`, `dokploy` (and `prod` once created) A records DNS-only |
+| Self-hosted URL | test: `https://test.usereflow.app` (was `self`), prod: `https://prod.usereflow.app` (phase 13a) |
 | VM size | `Standard_B2ls_v2` (2 vCPU, 4 GiB, 30% CPU baseline), resized from B1ms on 2026-10-16 |
 | VM private IP | `172.16.0.4` (`eth0`, `172.16.0.0/24`). Swarm advertise address |
 | Docker overlay subnets | `ingress` `10.0.0.0/24`, `dokploy-network` `10.0.1.0/24`. No overlap with the VM subnet |
@@ -141,3 +141,4 @@ tunnel, which works the same before and after Dokploy).
 | 2026-11-08 | 11 | DEV_MODE mock-task check passed (user, PowerShell: set `$env:VITE_DEV_MODE`, the bash-style prefix does not work). Archived. |
 | 2026-11-08 | 13 | Verified: failing test stops at `test` with nothing deployed; visible copy change deployed and a revert rolled it back; data survived. Archived. Next: 13a. |
 | 2026-11-08 | 13a | Decisions: prod domain `prod.usereflow.app`; test deploys from `feature/selfhost-poc` (temporary, `dev` after the PoC merge), prod from `main` with approval; one Postgres container per environment. |
+| 2026-11-08 | 13a | Test renamed: `https://test.usereflow.app` works (DNS, Dokploy env/domain, pipeline deploy green). Compose parametrized, workflow has test/prod input. Security review: secrets must be environment-scoped with separate prod token (in prod steps). Open: delete `self` DNS record, then create prod. |

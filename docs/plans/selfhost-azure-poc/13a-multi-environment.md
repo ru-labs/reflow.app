@@ -30,10 +30,10 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 
 ## Rename self → test [you]
 
-- [ ] **[you]** Cloudflare DNS: add an A record `test` → `98.71.18.196` (DNS only). Keep `self` for now.
-- [ ] **[you]** Dokploy → `reflow` compose → *Environment*: add `PGDATA_VOLUME=reflow_pgdata`, `DB_HOST_PORT=5432`, and rename the compose service to `reflow-test` (display name only; the project name used by `docker exec` stays unless noted below).
-- [ ] **[you]** Dokploy → Domains: change `self.usereflow.app` → `test.usereflow.app` (Let's Encrypt issues the cert on the first request).
-- [ ] **[agent]** Push. **[you]** Deploy, then check `https://test.usereflow.app/api/health` and sign in with a phase-12 account. The data is still there because the volume is the same. (Cookies are per host, so you sign in once again.)
+- [x] **[you]** Cloudflare DNS: add an A record `test` → `98.71.18.196` (DNS only). Keep `self` for now.
+- [x] **[you]** Dokploy → `reflow` compose → *Environment*: add `PGDATA_VOLUME=reflow_pgdata`, `DB_HOST_PORT=5432`, and rename the compose service to `reflow-test` (display name only; the project name used by `docker exec` stays unless noted below).
+- [x] **[you]** Dokploy → Domains: change `self.usereflow.app` → `test.usereflow.app` (Let's Encrypt issues the cert on the first request).
+- [x] **[agent]** Push. **[you]** Deploy, then check `https://test.usereflow.app/api/health` and sign in with a phase-12 account. The data is still there because the volume is the same. (Cookies are per host, so you sign in once again.)
 - [ ] **[you]** Cloudflare: delete the `self` A record. Update the Environment facts table in `00-overview.md` (Self-hosted URL, compose project names).
 
 ## Create prod [you]
