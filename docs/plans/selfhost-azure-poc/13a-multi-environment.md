@@ -42,7 +42,7 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 - [x] **[you]** Cloudflare DNS: A record `prod` → `98.71.18.196` (DNS only).
 - [x] **[you]** Dokploy: new Compose service `reflow-prod`, same repo, branch `main` (or as decided above), compose path `deploy/selfhost/compose.yaml`. Environment: `BUILD_MODE=selfhosted`, **a different** `POSTGRES_PASSWORD` (save it in `/opt/reflow/.env.prod`, chmod 600), `PGDATA_VOLUME=reflow_prod_pgdata`, `DB_HOST_PORT=5433`, `APP_VERSION`/`VITE_APP_VERSION=prod-1`, `SESSION_TTL_DAYS=30`, `AUTH_RATE_LIMIT_PER_MIN=10`. **Auto Deploy off.**
 - [x] **[you]** Dokploy → `reflow-prod` → Advanced: turn **Isolated Deployment** on (as test has), so prod's `api`/`db` names can't resolve to test's containers.
-- [ ] **[you]** GitHub: move the Dokploy secrets into environment secrets as in `deploy/selfhost/README.md`: a test-only Dokploy token on `selfhost-poc`, a separate prod token + `SELFHOST_COMPOSE_ID_PROD` on `selfhost-prod`, remove the repo-level ones; `selfhost-prod`: required reviewers (no self-review), deployment branches `main` only.
+- [x] **[you]** GitHub: move the Dokploy secrets into environment secrets as in `deploy/selfhost/README.md`: a test-only Dokploy token on `selfhost-poc`, a separate prod token + `SELFHOST_COMPOSE_ID_PROD` on `selfhost-prod`, remove the repo-level ones; `selfhost-prod`: required reviewers (no self-review), deployment branches `main` only. **Done 2026-11-08 for prod only; test keeps the repo-level secrets. Dokploy tokens are per user, so this isn't a hard boundary: whoever can push the test branch can still reach prod. Accepted (single owner). Self-review left off (single reviewer).**
 - [x] **[you]** Domain `prod.usereflow.app` → service `web`, port 80, HTTPS on.
 - [x] **[you]** Deploy. `curl.exe -s https://prod.usereflow.app/api/health` returns `{"ok":true,"version":"prod-1"}`.
 - [x] **[you]** Note both stacks' RAM from `docker stats --no-stream` and `free -m` in the session log (this is the real number for the idle question below).
@@ -73,6 +73,6 @@ always on.
 
 ## Verify the whole phase [you]
 
-- [ ] **[you]** The pipeline from phase 13 deploys to `test` by default and to `prod` only after the approval click.
+- [ ] **[you]** The pipeline from phase 13 deploys to `test` by default and to `prod` only after the approval click. **Prod half can only be tested after the PoC is merged to main (workflow guard); until then prod is deployed from Dokploy's Deploy button.**
 - [ ] **[you]** Phase 12's smoke list passes on `test.usereflow.app` (auth, duel, reorder, history, theme, SSE, isolation).
 - [ ] **[you]** Session log line, update the Environment facts table and the architecture diagram's domains in `00-overview.md`, then move this file to `archive/`.
