@@ -12,17 +12,17 @@ phase 13 (pipeline) and before phase 14 (load test, which now targets **test**).
 
 ## Decisions to make first [you]
 
-- [ ] **[you]** Prod's temporary domain before the cutover. Proposed: `prod.usereflow.app`, replaced by `usereflow.app` + `www` in phase 15. Recorded in the session log: ___
-- [ ] **[you]** Branch per environment. Proposed: **test** deploys from `dev`-style integration (today `feature/selfhost-poc`), **prod** from `main`, matching the flow in CLAUDE.md. Prod deploys need a manual approval in GitHub. Recorded: ___
-- [ ] **[you]** Postgres layout. Proposed: **one Postgres container per environment** (own volume, own password), not two databases in one container. It costs ~50–100 MB more RAM but isolates them completely: a bad test migration or load test can't touch prod. Recorded: ___
+- [x] **[you]** Prod's temporary domain before the cutover: `prod.usereflow.app`, replaced by `usereflow.app` + `www` in phase 15. Decided 2026-11-08.
+- [x] **[you]** Branch per environment. Proposed: **test** deploys from `dev`-style integration (today `feature/selfhost-poc`), **prod** from `main`, matching the flow in CLAUDE.md. Prod deploys need a manual approval in GitHub. Decided 2026-11-08: the test branch is temporary; after the PoC is merged, test deploys from `dev`.
+- [x] **[you]** Postgres layout: **one Postgres container per environment** (own volume, own password). Decided 2026-11-08.
 
 ## Make the compose multi-environment [agent]
 
-- [ ] **[agent]** `deploy/selfhost/compose.yaml`: parametrize everything that is currently hard-wired to one environment:
+- [x] **[agent]** `deploy/selfhost/compose.yaml`: parametrize everything that is currently hard-wired to one environment:
   - the volume name `reflow_pgdata` → `${PGDATA_VOLUME}` (still `external: true`)
   - the host DB port `127.0.0.1:5432:5432` → `127.0.0.1:${DB_HOST_PORT:-5432}:5432` (test 5432, prod 5433; localhost only, so the tunnel still works)
   - the Postgres tuning flags (`shared_buffers` etc.) → env vars with the current values as defaults, so test can run smaller than prod
-- [ ] **[agent]** Add `mem_limit` per service (env-overridable defaults, e.g. db 512m, api 384m, web 64m) so one environment can't starve the other or Dokploy. Verify the values against the measured RAM in the session log before choosing.
+- [x] **[agent]** Add `mem_limit` per service (env-overridable defaults, e.g. db 512m, api 384m, web 64m) so one environment can't starve the other or Dokploy. Verify the values against the measured RAM in the session log before choosing.
 - [ ] **[agent]** `deploy/selfhost/.env.example`: add `PGDATA_VOLUME`, `DB_HOST_PORT`, the tuning vars, and a table in `deploy/selfhost/README.md` (create it if phase 13 hasn't) of the env values for **test** and **prod**.
 - [ ] **[agent]** Make `APP_VERSION` / `VITE_APP_VERSION` carry the environment (e.g. `test-…` / `prod-…`) so `/api/health` and the version badge say which one you're looking at.
 - [ ] **[agent]** Phase 13's workflows (`selfhost-deploy.yml`, rollback): add an input `environment: test|prod` choosing the Dokploy compose ID (`SELFHOST_COMPOSE_ID_TEST` / `_PROD`) and health-check URL. The `prod` job uses a GitHub *environment* with required reviewers.

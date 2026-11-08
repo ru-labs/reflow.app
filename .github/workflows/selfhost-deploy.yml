@@ -1,6 +1,7 @@
 name: Selfhost deploy
 
-# Dokploy builds the head of feature/selfhost-poc, so the tests must run on that same commit.
+# Dokploy builds the head of the branch configured on each compose (test: feature/selfhost-poc,
+# prod: main), so the tests must run on that same commit.
 # The push trigger is needed because GitHub only offers "Run workflow" for files on the
 # default branch; this one lives on the feature branch until the PoC is merged.
 on:
@@ -10,6 +11,12 @@ on:
       - 'docs/**'
       - '**.md'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy (prod needs approval and must be run from main)
+        type: choice
+        options: [test, prod]
+        default: test
 
 permissions:
   contents: read
@@ -19,7 +26,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  HEALTH_URL: https://self.usereflow.app/api/health
+  # push events have no inputs, so they always deploy test
+  TARGET: ${{ inputs.environment || 'test' }}
 
 jobs:
   test:
@@ -39,6 +47,10 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
+      - name: Prod deploys only from main
+        if: env.TARGET == 'prod' && github.ref != 'refs/heads/main'
+        run: echo "prod deploys must be run from main"; exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -70,11 +82,13 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    environment: selfhost-poc
+    # selfhost-prod is a GitHub environment with required reviewers (the approval click)
+    environment: ${{ inputs.environment == 'prod' && 'selfhost-prod' || 'selfhost-poc' }}
     env:
       DOKPLOY_URL: ${{ secrets.SELFHOST_DOKPLOY_URL }}
       DOKPLOY_TOKEN: ${{ secrets.SELFHOST_DOKPLOY_TOKEN }}
-      COMPOSE_ID: ${{ secrets.SELFHOST_COMPOSE_ID }}
+      COMPOSE_ID: ${{ inputs.environment == 'prod' && secrets.SELFHOST_COMPOSE_ID_PROD || secrets.SELFHOST_COMPOSE_ID }}
+      HEALTH_URL: ${{ inputs.environment == 'prod' && 'https://prod.usereflow.app/api/health' || 'https://test.usereflow.app/api/health' }}
     steps:
       - name: Trigger the Dokploy deployment
         run: |

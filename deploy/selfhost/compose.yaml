@@ -2,22 +2,23 @@ services:
   db:
     image: postgres:17-alpine          # pin 17: the 18 image moved its data dir, don't upgrade casually
     restart: unless-stopped
+    mem_limit: ${DB_MEM_LIMIT:-512m}
     environment:
       POSTGRES_USER: reflow
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: reflow
     command: >
       postgres
-      -c shared_buffers=256MB
-      -c effective_cache_size=768MB
-      -c work_mem=4MB
-      -c maintenance_work_mem=64MB
-      -c max_connections=100
+      -c shared_buffers=${PG_SHARED_BUFFERS:-256MB}
+      -c effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-768MB}
+      -c work_mem=${PG_WORK_MEM:-4MB}
+      -c maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-64MB}
+      -c max_connections=${PG_MAX_CONNECTIONS:-100}
       -c shared_preload_libraries=pg_stat_statements
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"          # localhost only, never 0.0.0.0 (Docker bypasses ufw)
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"  # localhost only, never 0.0.0.0 (Docker bypasses ufw)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U reflow -d reflow"]
       interval: 10s
@@ -36,12 +37,14 @@ services:
         VITE_APP_VERSION: ${VITE_APP_VERSION:-}
         VITE_APP_COMMIT: ${VITE_APP_COMMIT:-}
     restart: unless-stopped
+    mem_limit: ${WEB_MEM_LIMIT:-64m}
     expose:
       - "80"                           # no ports: Traefik reaches it over the network
 
   api:
     build: ../../server
     restart: unless-stopped
+    mem_limit: ${API_MEM_LIMIT:-384m}
     # explicit environment (no env_file) so the API never sees the build-only VITE_* values
     environment:
       DATABASE_URL: postgres://reflow:${POSTGRES_PASSWORD}@db:5432/reflow
@@ -59,4 +62,4 @@ services:
 volumes:
   pgdata:
     external: true
-    name: reflow_pgdata                # created by the hand-made phase-05 project
+    name: ${PGDATA_VOLUME:-reflow_pgdata}   # created by hand (phase 05 / 13a)
