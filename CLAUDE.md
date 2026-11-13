@@ -60,10 +60,16 @@ the architecture above unless that plan says a phase landed.
 
 1. **Plan first.** For any feature, write a plan as a trackable `.md` with a `- [ ]` task
    list (see "Plans") and **stop for approval**. Don't implement before it's approved.
-2. **Execute** the approved plan, ticking boxes as you go.
+2. **Execute** the approved plan, ticking boxes as you go: the Architect turns it into Board
+   tasks (see "Agents") and runs the subagents.
 3. **Hand off for manual testing.** When done, say so and give short, concrete steps for
    testing it by hand (what to click, what to expect, edge cases worth trying, e.g. with
    `VITE_DEV_MODE=true npm run dev`). The user tests and reports bugs.
+
+**Testing split:** the author of the code writes its unit test (vitest, next to the logic) and runs
+the cheap checks (`build`/`test`/`lint`/`typecheck`) before `review`. I test the visual and
+behavioral side by hand from the task's `## Manual test` steps — there is no tester agent.
+Backend tests that need a real Postgres are not run by agents.
 
 **Do not self-test in the browser** (Playwright MCP, screenshots, browser automation) or
 write e2e tests unless the user explicitly asks — it burns tokens the user would rather
@@ -115,34 +121,53 @@ list. Each phase gets its own feature branch.
 
 ## Agents
 
-Subagents live in `.claude/agents/`. Frontend work stays in the main session.
+The main session is the **Architect**; subagents live in `.claude/agents/`. Coordination runs through
+the **Board** in `docs/board/` (lifecycle, task template and rules: `docs/board/README.md`).
 
-- `server/` and `server/migrations/` work → **backend-db-engineer**.
-- `deploy/`, `.github/`, compose, Dokploy config, backups → **devops-engineer** (local files and
-  runbooks only).
-- Run **security-reviewer** AUTOMATICALLY, before declaring a task done, after changes to: auth,
-  sessions, SSE/realtime, API routes, input handling, dependencies, `deploy/`, workflows, compose,
-  proxy config or secrets handling.
-- Run **design-reviewer** only when I ask.
-- If any agent returns a CONFLICT report, or a "must fix" that contradicts my instructions, stop
-  and relay it to me immediately. Never resolve it silently.
-- There are no override phrases. Agent rules always apply; I resolve conflicts by telling the main
-  session what to do.
-- project-cleaner runs ONLY when I explicitly ask for it. Never launch it proactively, from another
-  agent, or as part of a normal task.
-- Its Questions are relayed by the main session to the named agents. Their answers go back to the
-  cleaner when I re-run it. Never override its protected list.
-- **Ponytail** (`.claude/skills/ponytail/`, third-party, unmodified) is on in **lite** for code-writing
-  work: the main session and backend-db-engineer only. Default level is lite, not the skill's own
-  `full`. Build what I ask; at most name the lazier alternative in one line. I switch with
-  `/ponytail full|ultra`; "stop ponytail" or `/ponytail off` turns it off. Reviewers and
-  devops-engineer do not use it.
-- Precedence: my explicit instructions, `branding.md`, agent report formats (reviewer format,
-  CONFLICT report, runbooks), and the security, validation and accessibility rules ALWAYS win over
-  ponytail. If ponytail would shorten or skip any of those, ignore it for that point. Existing
-  dependencies (e.g. framer-motion) stay; ponytail does not override them.
-- Tests use vitest, not the skill's assert/demo style. One small test for non-trivial logic is fine.
-- The doc rule ("docs I own are part of done") wins over ponytail's brevity.
+| Role | Model | Works on |
+|---|---|---|
+| **Architect** (main session) | Opus or Sonnet, my choice | Session topic, Board, reviews, docs. Delegates code work to the seniors. |
+| **junior-developer** | Haiku | Read-only: searches, summaries, lookups, git commit lists. Writes only `.md` results. Facts only, no guessing, no skills. |
+| **senior-frontend** | Sonnet | Frontend: `src/`, `patches/`. |
+| **senior-backend** | Sonnet | Backend and DB: `server/`, `server/migrations/`, `supabase/migrations/`. |
+| **devops-engineer** | Sonnet (Haiku for simple tasks) | `deploy/`, `.github/`, compose, Dokploy config, backups. Local files and runbooks only. |
+
+**When to delegate** (a subagent spawn is slow and starts cold — don't pay for trivial work):
+- **Architect does it directly** when ALL hold: small (roughly ≤30 lines, 1–2 files), one lane, no
+  design decision, no side effects on DB, deploy, auth or input limits. Then no Board task.
+- **Always in the main window:** conversation, plans, Board upkeep, reviewing reports, git, small
+  doc edits, reading code, a few lookups.
+- **Needs a Board task:** anything over that size, multi-file or multi-lane work, migrations,
+  workflows/compose, `server/` changes, and anything I may want to track or hand off.
+- **Junior** only for broad sweeps (many files, long commit histories); a handful of lookups the
+  Architect does itself.
+- **Cross-lane work:** one task per lane, ordered by dependency (e.g. migration first, I apply it).
+  Run seniors in parallel only when their file sets don't overlap.
+
+Architect rules:
+- Keeps the Board: writes tasks with specs, sets priority, tracks lifecycle. A task a senior proposes
+  for the junior stays `proposed` until the Architect reviews it; `needs-revision` goes back to the
+  senior first. Nothing runs before `approved`.
+- One subagent runs one task, follows its spec and reports back through the Board. Collects and
+  reviews every report before calling a task `done`; a task with manual test steps waits for my
+  confirmation (or waiver) first.
+- Cares about overall stability and maintainability, not about delivering a task at any cost. Pushes
+  back or splits tasks instead.
+- Documentation stays current: the Architect creates doc tasks or prompts subagents rather than
+  writing everything itself.
+- Decides per task whether a subagent gets the **ponytail** skill (`ponytail:` field in the task).
+  The Architect itself uses ponytail only when I ask (`/ponytail lite|full|ultra`; `/ponytail off`
+  stops it). Seniors may use other skills from the skill library when they clearly match the task.
+- If a subagent returns a CONFLICT report, or a result that contradicts my instructions, stop and
+  relay it to me immediately. Never resolve it silently. There are no override phrases.
+- Subagents never commit, push or touch git history; the Architect does, within the hard rules above.
+- Precedence: my explicit instructions, `branding.md`, CONFLICT reports and runbooks, and the
+  security, validation and accessibility rules ALWAYS win over ponytail. Existing dependencies (e.g.
+  framer-motion) stay. Tests use vitest; one small test for non-trivial logic is fine.
+- There is no automatic security or design review any more. For changes to auth, sessions, SSE/
+  realtime, API routes, input handling, dependencies, `deploy/`, workflows, compose, proxy config or
+  secrets, the Architect checks the diff itself against the senior's report before `done` and
+  flags anything it is unsure about to me.
 
 ## Documentation
 
@@ -151,16 +176,16 @@ placeholders.
 
 | Kind | Lives in | Owner |
 |---|---|---|
-| Setup | `README.md` | main session |
-| Architecture overview, frontend | `docs/ARCHITECTURE.md` | main session |
-| API routes, schema | `server/README.md` (schema itself: `server/migrations/`) | backend-db-engineer |
+| Setup | `README.md` | Architect (main session) |
+| Architecture overview, frontend | `docs/ARCHITECTURE.md` | Architect (main session) |
+| API routes, schema | `server/README.md` (schema itself: `server/migrations/`) | senior-backend |
 | Deploy | `deploy/selfhost/README.md` | devops-engineer |
 | Runbooks (manual steps outside the repo) | `docs/runbooks/` (created with the first one) | devops-engineer |
 | Brand and product | `branding.md`, `PRODUCT.md` | changed only when I decide |
 
 Updating the docs you own is part of "done": a task is not finished until they match the change.
-Read-only reviewers cannot edit docs; they list outdated or missing docs under "Should fix" and the
-owner updates them.
+The Architect creates a doc task on the Board when a change leaves a doc outdated; the owner
+updates it.
 
 ## Working style
 
